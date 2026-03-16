@@ -13,6 +13,21 @@ const addressSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const cartItemSchema = new mongoose.Schema(
+  {
+    productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
+    title: { type: String, required: true, trim: true },
+    image: { type: String, required: true, trim: true },
+    category: { type: String, required: true, trim: true },
+    discountedPrice: { type: Number, required: true, min: 0 },
+    oldPrice: { type: Number, required: true, min: 0 },
+    quantity: { type: Number, required: true, min: 1 },
+    selectedColor: { type: String, default: "", trim: true },
+    selectedSize: { type: String, default: "", trim: true }
+  },
+  { _id: false }
+);
+
 const customerSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
@@ -26,7 +41,8 @@ const customerSchema = new mongoose.Schema(
     totalSpent: { type: Number, default: 0, min: 0 },
     orderCount: { type: Number, default: 0, min: 0 },
     lastOrderAt: { type: Date },
-    defaultAddress: { type: addressSchema, default: () => ({}) }
+    defaultAddress: { type: addressSchema, default: () => ({}) },
+    cartItems: { type: [cartItemSchema], default: [] }
   },
   { timestamps: true }
 );

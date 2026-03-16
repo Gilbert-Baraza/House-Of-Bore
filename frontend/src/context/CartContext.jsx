@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { AuthContext } from './AuthContext';
+import { fetchMyCart, saveMyCart } from '../api/customerCart';
 
 const CartContext = createContext();
 const getCartStorageKey = (customerId) => (customerId ? `cart_customer_${customerId}` : 'cart_guest');
@@ -47,6 +48,7 @@ const CartProvider = ({ children }) => {
   const [cart, setCart] = useState(() => readCartFromStorage(getCartStorageKey(null)));
   const [cartReady, setCartReady] = useState(true);
   const previousCustomerIdRef = useRef(customer?.id || null);
+  const saveTimeoutRef = useRef(null);
 
   useEffect(() => {
     const previousCustomerId = previousCustomerIdRef.current;
@@ -58,21 +60,36 @@ const CartProvider = ({ children }) => {
     setCartReady(false);
     setStorageKey(nextStorageKey);
 
-    const nextStoredCart = readCartFromStorage(nextStorageKey);
-
-    if (isGuestToAccountTransition) {
-      const guestCart = readCartFromStorage(guestStorageKey);
-      const mergedCart = mergeCartCollections(nextStoredCart, guestCart);
-
-      localStorage.setItem(nextStorageKey, JSON.stringify(mergedCart));
-      localStorage.removeItem(guestStorageKey);
-      setCart(mergedCart);
-    } else {
-      setCart(nextStoredCart);
-    }
-
     previousCustomerIdRef.current = nextCustomerId;
-    setCartReady(true);
+
+    const loadCart = async () => {
+      try {
+        if (nextCustomerId) {
+          const backendCartPayload = await fetchMyCart();
+          const backendCart = backendCartPayload.data || [];
+
+          if (isGuestToAccountTransition) {
+            const guestCart = readCartFromStorage(guestStorageKey);
+            const mergedCart = mergeCartCollections(backendCart, guestCart);
+            localStorage.removeItem(guestStorageKey);
+            localStorage.setItem(nextStorageKey, JSON.stringify(mergedCart));
+            setCart(mergedCart);
+          } else {
+            localStorage.setItem(nextStorageKey, JSON.stringify(backendCart));
+            setCart(backendCart);
+          }
+        } else {
+          setCart(readCartFromStorage(nextStorageKey));
+        }
+      } catch (error) {
+        const fallbackCart = readCartFromStorage(nextStorageKey);
+        setCart(fallbackCart);
+      } finally {
+        setCartReady(true);
+      }
+    };
+
+    loadCart();
   }, [customer?.id]);
 
   useEffect(() => {
@@ -82,6 +99,26 @@ const CartProvider = ({ children }) => {
 
     localStorage.setItem(storageKey, JSON.stringify(cart));
   }, [cart, cartReady, storageKey]);
+
+  useEffect(() => {
+    if (!cartReady || !customer?.id) {
+      return;
+    }
+
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    saveTimeoutRef.current = setTimeout(() => {
+      saveMyCart(cart).catch(console.error);
+    }, 300);
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [cart, cartReady, customer?.id]);
 
   const addToCart = (product) => {
     const productKey = product.id || product._id;

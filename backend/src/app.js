@@ -13,6 +13,7 @@ const storeOrderRoutes = require("./routes/storeOrderRoutes");
 const storeCategoryRoutes = require("./routes/storeCategoryRoutes");
 const customerAuthRoutes = require("./routes/customerAuthRoutes");
 const customerOrderRoutes = require("./routes/customerOrderRoutes");
+const customerCartRoutes = require("./routes/customerCartRoutes");
 
 const app = express();
 const allowedOrigins = [
@@ -46,6 +47,7 @@ app.use("/api/categories", storeCategoryRoutes);
 app.use("/api/orders", storeOrderRoutes);
 app.use("/api/customer/auth", customerAuthRoutes);
 app.use("/api/customer/orders", customerOrderRoutes);
+app.use("/api/customer/cart", customerCartRoutes);
 app.use("/api/admin/auth", authRoutes);
 app.use("/api/admin/dashboard", dashboardRoutes);
 app.use("/api/admin/products", adminProductRoutes);
