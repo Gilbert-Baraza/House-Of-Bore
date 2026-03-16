@@ -20,6 +20,10 @@ import { EmptyCartContext } from './context/EmptyCartContext';
 import { ProductDetailContext } from './context/ProductDetailContext'
 import { CartProvider } from './context/CartContext';
 import { ProductSpecsContext } from './context/ProductSpecsContext';
+import { AuthProvider } from './context/AuthContext';
+import SignIn from './components/Auth/SignIn';
+import SignUp from './components/Auth/SignUp';
+import Account from './components/Auth/Account';
 
 
 function App() {
@@ -51,10 +55,11 @@ function App() {
         <ProductMoreContext.Provider value={{ productMore, setProductMore }}>
           <EmptyCartContext.Provider value={{ emptyCart, setEmptyCart }}>
             <ProductDetailContext.Provider value={{ productDetail, setProductDetail }}>
-              <CartProvider>
-                <ProductSpecsContext.Provider value={{ productSpecs, setProductSpecs }}>
-                  <Router>
-                    <Routes>
+              <AuthProvider>
+                <CartProvider>
+                  <ProductSpecsContext.Provider value={{ productSpecs, setProductSpecs }}>
+                    <Router>
+                      <Routes>
                       <Route path='/'
                         element={<div>
                           <TopNav />
@@ -93,10 +98,32 @@ function App() {
                           <Footer />
                         </div>}>
                       </Route>
-                    </Routes>
-                  </Router>
-                </ProductSpecsContext.Provider>
-              </CartProvider>
+                      <Route path='/signin'
+                        element={<div>
+                          <TopNav />
+                          <SignIn />
+                          <Footer />
+                        </div>}>
+                      </Route>
+                      <Route path='/signup'
+                        element={<div>
+                          <TopNav />
+                          <SignUp />
+                          <Footer />
+                        </div>}>
+                      </Route>
+                      <Route path='/account'
+                        element={<div>
+                          <TopNav />
+                          <Account />
+                          <Footer />
+                        </div>}>
+                      </Route>
+                      </Routes>
+                    </Router>
+                  </ProductSpecsContext.Provider>
+                </CartProvider>
+              </AuthProvider>
             </ProductDetailContext.Provider>
           </EmptyCartContext.Provider>
         </ProductMoreContext.Provider>

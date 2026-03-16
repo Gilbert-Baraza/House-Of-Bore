@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect, useMemo } from 'react';
 import topnavStyles from './TopNav.module.css';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
@@ -11,15 +11,51 @@ import Offcanvas from 'react-bootstrap/Offcanvas';
 import Accordion from 'react-bootstrap/Accordion';
 import { Link } from 'react-router-dom';
 import { CartContext } from '../../context/CartContext';
+import { AuthContext } from '../../context/AuthContext';
 import BrandLogo from '../common/BrandLogo';
 import { siteContent } from '../../data/siteContent';
+import { fetchCategories } from '../../api/categories';
 
 const TopNav = () => {
   const [topText, setTopText] = useState(true);
   const [show, setShow] = useState(false);
+  const [storeCategories, setStoreCategories] = useState([]);
   const { cart } = useContext(CartContext);
+  const { customer, isAuthenticated, signOut } = useContext(AuthContext);
   const { promoBar, navigation } = siteContent;
   const totalQty = cart.reduce((acc, product) => acc + product.quantity, 0);
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const results = await fetchCategories();
+        setStoreCategories(results);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    loadCategories();
+  }, []);
+
+  const shopGroups = useMemo(() => {
+    if (!storeCategories.length) {
+      return navigation.shopGroups;
+    }
+
+    return storeCategories.map((category) => ({
+      title: category.name,
+      description: category.description || `Shop the latest picks in ${category.name}.`
+    }));
+  }, [navigation.shopGroups, storeCategories]);
+
+  const quickLinks = useMemo(() => {
+    if (!storeCategories.length) {
+      return navigation.links;
+    }
+
+    return storeCategories.slice(0, 3).map((category) => category.name);
+  }, [navigation.links, storeCategories]);
 
   return (
     <div className='fixed-top'>
@@ -71,7 +107,7 @@ const TopNav = () => {
                       <Accordion.Header>Shop</Accordion.Header>
                       <Accordion.Body>
                         <ul className='list-unstyled'>
-                          {navigation.shopGroups.map((item) => (
+                          {shopGroups.map((item) => (
                             <li key={item.title} className='ms-1 py-2'>
                               <Link to='/shop' className='text-decoration-none text-dark'>{item.title}</Link>
                             </li>
@@ -81,11 +117,23 @@ const TopNav = () => {
                     </Accordion.Item>
                   </Accordion>
                 </li>
-                {navigation.links.map((item) => (
+                {quickLinks.map((item) => (
                   <li key={item} className='py-2'>
                     <Link to='/shop' className='text-decoration-none text-dark'>{item}</Link>
                   </li>
                 ))}
+                <li className='py-2'>
+                  <Link to={isAuthenticated ? '/account' : '/signin'} className='text-decoration-none text-dark'>
+                    {isAuthenticated ? 'My Account' : 'Sign In'}
+                  </Link>
+                </li>
+                {isAuthenticated ? (
+                  <li className='py-2'>
+                    <button type="button" className='border-0 bg-transparent p-0 text-dark' onClick={signOut}>
+                      Sign Out
+                    </button>
+                  </li>
+                ) : null}
               </ul>
             </Offcanvas.Body>
           </Offcanvas>
@@ -96,7 +144,7 @@ const TopNav = () => {
             <Nav className="me-auto pt-2" id="nav-dropdown">
               <NavDropdown title={<span className='d-flex align-items-baseline fw-semibold' style={{ color: '#000' }}>Shop</span>}>
                 <Row>
-                  {navigation.shopGroups.map((item) => (
+                  {shopGroups.map((item) => (
                     <Col lg={6} key={item.title}>
                       <Link to='/shop' className='text-decoration-none text-dark'>
                         <NavDropdown.Item href="/shop" className='pb-3'>
@@ -108,7 +156,7 @@ const TopNav = () => {
                   ))}
                 </Row>
               </NavDropdown>
-              {navigation.links.map((item) => (
+              {quickLinks.map((item) => (
                 <Link key={item} to='/shop' className='text-decoration-none fw-semibold'>
                   <Nav.Link href="/shop">{item}</Nav.Link>
                 </Link>
@@ -125,6 +173,11 @@ const TopNav = () => {
                 <Link to='/cart' className='text-decoration-none text-dark position-relative'>
                   Cart
                   {totalQty > 0 ? <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-dark">{totalQty}</span> : ''}
+                </Link>
+              </span>
+              <span className='me-lg-3 text-dark'>
+                <Link to={isAuthenticated ? '/account' : '/signin'} className='text-decoration-none text-dark'>
+                  {isAuthenticated ? customer?.name?.split(' ')[0] || 'Account' : 'Sign In'}
                 </Link>
               </span>
             </Form>

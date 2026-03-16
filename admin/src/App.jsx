@@ -8,6 +8,7 @@ const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const ProductsPage = lazy(() => import("./pages/ProductsPage"));
 const CategoriesPage = lazy(() => import("./pages/CategoriesPage"));
 const OrdersPage = lazy(() => import("./pages/OrdersPage"));
+const CustomersPage = lazy(() => import("./pages/CustomersPage"));
 
 const RouteLoader = () => <div className="route-loader">Loading workspace...</div>;
 
@@ -28,6 +29,7 @@ const App = () => (
         <Route path="products" element={<ProductsPage />} />
         <Route path="categories" element={<CategoriesPage />} />
         <Route path="orders" element={<OrdersPage />} />
+        <Route path="customers" element={<CustomersPage />} />
       </Route>
     </Routes>
   </Suspense>

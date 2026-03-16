@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { apiClient } from "../api/client";
 import PageHeader from "../components/ui/PageHeader";
 import DataTable from "../components/ui/DataTable";
+import AccessNotice from "../components/ui/AccessNotice";
+import { hasPermission } from "../utils/permissions";
 
 const initialForm = {
   name: "",
@@ -10,6 +12,7 @@ const initialForm = {
 };
 
 const CategoriesPage = () => {
+  const canWrite = hasPermission("categories:write");
   const [categories, setCategories] = useState([]);
   const [form, setForm] = useState(initialForm);
   const [editingId, setEditingId] = useState("");
@@ -67,13 +70,18 @@ const CategoriesPage = () => {
           <div className="panel-card__header">
             <h3>{editingId ? "Edit category" : "Create category"}</h3>
           </div>
+          {!canWrite ? (
+            <AccessNotice message="Your role can view categories, but only managers and super admins can change them." />
+          ) : null}
           <div className="form-grid form-grid--single">
             <input
+              disabled={!canWrite}
               placeholder="Category name"
               value={form.name}
               onChange={(event) => setForm((previous) => ({ ...previous, name: event.target.value }))}
             />
             <textarea
+              disabled={!canWrite}
               placeholder="Category description"
               value={form.description}
               onChange={(event) => setForm((previous) => ({ ...previous, description: event.target.value }))}
@@ -82,6 +90,7 @@ const CategoriesPage = () => {
           <div className="checkbox-row">
             <label>
               <input
+                disabled={!canWrite}
                 type="checkbox"
                 checked={form.isFeatured}
                 onChange={(event) => setForm((previous) => ({ ...previous, isFeatured: event.target.checked }))}
@@ -90,7 +99,7 @@ const CategoriesPage = () => {
             </label>
           </div>
           <div className="form-actions">
-            <button type="submit" className="primary-button">
+            <button disabled={!canWrite} type="submit" className="primary-button">
               {editingId ? "Update category" : "Create category"}
             </button>
             <button type="button" className="secondary-button" onClick={resetForm}>
@@ -115,10 +124,10 @@ const CategoriesPage = () => {
                 label: "Actions",
                 render: (row) => (
                   <div className="table-actions">
-                    <button type="button" className="secondary-button" onClick={() => handleEdit(row)}>
+                    <button disabled={!canWrite} type="button" className="secondary-button" onClick={() => handleEdit(row)}>
                       Edit
                     </button>
-                    <button type="button" className="danger-button" onClick={() => handleDelete(row._id)}>
+                    <button disabled={!canWrite} type="button" className="danger-button" onClick={() => handleDelete(row._id)}>
                       Delete
                     </button>
                   </div>

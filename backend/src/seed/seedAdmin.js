@@ -9,16 +9,37 @@ const runSeed = async () => {
     await connectDB();
     await AdminUser.deleteMany({});
 
-    const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD || "admin12345", 10);
+    const users = [
+      {
+        name: "House of bore Admin",
+        email: process.env.ADMIN_EMAIL || "admin@houseofbore.com",
+        password: process.env.ADMIN_PASSWORD || "admin12345",
+        role: "super_admin"
+      },
+      {
+        name: "House of bore Manager",
+        email: "manager@houseofbore.com",
+        password: "manager12345",
+        role: "manager"
+      },
+      {
+        name: "House of bore Support",
+        email: "support@houseofbore.com",
+        password: "support12345",
+        role: "support"
+      }
+    ];
 
-    await AdminUser.create({
-      name: "House of bore Admin",
-      email: process.env.ADMIN_EMAIL || "admin@houseofbore.com",
-      password: hashedPassword,
-      role: "super_admin"
-    });
+    const adminUsers = await Promise.all(
+      users.map(async (user) => ({
+        ...user,
+        password: await bcrypt.hash(user.password, 10)
+      }))
+    );
 
-    console.log("Admin user seeded successfully");
+    await AdminUser.insertMany(adminUsers);
+
+    console.log("Admin users seeded successfully");
   } catch (error) {
     console.error("Admin seed failed:", error.message);
     process.exitCode = 1;

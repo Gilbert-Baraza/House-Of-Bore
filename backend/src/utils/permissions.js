@@ -1,0 +1,45 @@
+const PERMISSIONS = {
+  DASHBOARD_READ: "dashboard:read",
+  PRODUCTS_READ: "products:read",
+  PRODUCTS_WRITE: "products:write",
+  CATEGORIES_READ: "categories:read",
+  CATEGORIES_WRITE: "categories:write",
+  ORDERS_READ: "orders:read",
+  ORDERS_WRITE: "orders:write",
+  CUSTOMERS_READ: "customers:read",
+  CUSTOMERS_WRITE: "customers:write",
+  MEDIA_UPLOAD: "media:upload"
+};
+
+const ROLE_PERMISSIONS = {
+  super_admin: Object.values(PERMISSIONS),
+  manager: [
+    PERMISSIONS.DASHBOARD_READ,
+    PERMISSIONS.PRODUCTS_READ,
+    PERMISSIONS.PRODUCTS_WRITE,
+    PERMISSIONS.CATEGORIES_READ,
+    PERMISSIONS.CATEGORIES_WRITE,
+    PERMISSIONS.ORDERS_READ,
+    PERMISSIONS.ORDERS_WRITE,
+    PERMISSIONS.CUSTOMERS_READ,
+    PERMISSIONS.CUSTOMERS_WRITE,
+    PERMISSIONS.MEDIA_UPLOAD
+  ],
+  support: [
+    PERMISSIONS.DASHBOARD_READ,
+    PERMISSIONS.PRODUCTS_READ,
+    PERMISSIONS.CATEGORIES_READ,
+    PERMISSIONS.ORDERS_READ,
+    PERMISSIONS.ORDERS_WRITE,
+    PERMISSIONS.CUSTOMERS_READ,
+    PERMISSIONS.CUSTOMERS_WRITE
+  ]
+};
+
+const getPermissionsForRole = (role) => ROLE_PERMISSIONS[role] || [];
+
+module.exports = {
+  PERMISSIONS,
+  ROLE_PERMISSIONS,
+  getPermissionsForRole
+};

@@ -15,9 +15,10 @@ const productSchema = new mongoose.Schema(
     category: {
       type: String,
       required: true,
-      enum: ["Shoes", "Men", "Women", "Jeweleries"]
+      trim: true
     },
     image: { type: String, required: true, trim: true },
+    galleryImages: { type: [String], default: [] },
     rating: { type: Number, default: 0, min: 0, max: 5 },
     discountedPrice: { type: Number, required: true, min: 0 },
     oldPrice: { type: Number, required: true, min: 0 },

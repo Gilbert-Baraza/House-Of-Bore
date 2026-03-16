@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React, { useContext, useEffect, useMemo, useState } from 'react'
 import cartStyles from './Cart.module.css'
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
@@ -11,6 +11,9 @@ import Image from 'react-bootstrap/Image'
 import Card from 'react-bootstrap/Card'
 import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
+import Alert from 'react-bootstrap/Alert'
+import { createOrder } from '../../api/orders';
+import { AuthContext } from '../../context/AuthContext';
 
 
 const Cart = ({ emptyCart, productDetail, productSpecs }) => {
@@ -40,6 +43,25 @@ const Cart = ({ emptyCart, productDetail, productSpecs }) => {
     console.log(productDetail);
 
     const { cart, updateQuantity, removeFromCart } = useContext(CartContext)
+    const { clearCart } = useContext(CartContext)
+    const { customer, isAuthenticated, refreshOrders } = useContext(AuthContext)
+    const [checkout, setCheckout] = useState({
+        customerName: '',
+        customerEmail: '',
+        customerPhone: '',
+        fullName: '',
+        line1: '',
+        line2: '',
+        city: '',
+        region: '',
+        postalCode: '',
+        country: 'Kenya',
+        deliveryMethod: 'standard',
+        isSubscribed: true
+    });
+    const [submittingOrder, setSubmittingOrder] = useState(false);
+    const [orderSuccess, setOrderSuccess] = useState(null);
+    const [orderError, setOrderError] = useState('');
 
     console.log(cart);
 
@@ -50,6 +72,16 @@ const Cart = ({ emptyCart, productDetail, productSpecs }) => {
     const totalDiscountPercent = (subtotalCost - totalCost) / subtotalCost
 
     const totalQty = cart.reduce((acc, product) => acc + product.quantity, 0)
+    const hasCartItems = cart && cart.length > 0;
+    const shippingAddress = useMemo(() => ({
+        fullName: checkout.fullName || checkout.customerName,
+        line1: checkout.line1,
+        line2: checkout.line2,
+        city: checkout.city,
+        region: checkout.region,
+        postalCode: checkout.postalCode,
+        country: checkout.country
+    }), [checkout]);
 
     console.log(totalQty);
 
@@ -63,10 +95,82 @@ const Cart = ({ emptyCart, productDetail, productSpecs }) => {
         setEmptyCart(true)
     }
 
+    useEffect(() => {
+        if (!customer) {
+            return;
+        }
+
+        setCheckout((previous) => ({
+            ...previous,
+            customerName: customer.name || previous.customerName,
+            customerEmail: customer.email || previous.customerEmail,
+            customerPhone: customer.phone || previous.customerPhone,
+            fullName: customer.defaultAddress?.fullName || previous.fullName,
+            line1: customer.defaultAddress?.line1 || previous.line1,
+            line2: customer.defaultAddress?.line2 || previous.line2,
+            city: customer.defaultAddress?.city || previous.city,
+            region: customer.defaultAddress?.region || previous.region,
+            postalCode: customer.defaultAddress?.postalCode || previous.postalCode,
+            country: customer.defaultAddress?.country || previous.country,
+            isSubscribed: typeof customer.isSubscribed === 'boolean' ? customer.isSubscribed : previous.isSubscribed
+        }));
+    }, [customer]);
+
+    const handleCheckoutChange = (event) => {
+        const { name, value, type, checked } = event.target;
+        setCheckout((prev) => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked : value
+        }));
+    };
+
+    const handleCheckoutSubmit = async (event) => {
+        event.preventDefault();
+        setOrderError('');
+        setOrderSuccess(null);
+        setSubmittingOrder(true);
+
+        try {
+            const payload = {
+                customerName: checkout.customerName,
+                customerEmail: checkout.customerEmail,
+                customerPhone: checkout.customerPhone,
+                deliveryMethod: checkout.deliveryMethod,
+                isSubscribed: checkout.isSubscribed,
+                shippingAddress,
+                items: cart.map((item) => ({
+                    productId: item.id || item._id,
+                    quantity: item.quantity,
+                    selectedColor: item.selectedColor || '',
+                    selectedSize: item.selectedSize || ''
+                }))
+            };
+
+            const response = await createOrder(payload);
+            clearCart();
+            setEmptyCart(true);
+            setOrderSuccess(response.data);
+            if (isAuthenticated) {
+                refreshOrders().catch(console.error);
+            }
+        } catch (error) {
+            setOrderError(error.message);
+        } finally {
+            setSubmittingOrder(false);
+        }
+    };
+
     return (
         <section className={cartStyles.cartcontainer}>
             <Container fluid className='py-4'>
                 <Row>
+                    {orderSuccess ? (
+                        <Col lg={12}>
+                            <Alert variant='success' className={cartStyles.successalert}>
+                                Order {orderSuccess.orderNumber} placed successfully. Total: ${Math.round(orderSuccess.totalAmount)}
+                            </Alert>
+                        </Col>
+                    ) : null}
                     {emptyCart && cart.length === 0 &&
                         <Col lg={12}>
                             <div className={`${cartStyles.emptycartcontainer} text-center position relative`}>
@@ -80,7 +184,7 @@ const Cart = ({ emptyCart, productDetail, productSpecs }) => {
                             </div>
                         </Col>
                     }
-                    {cart && cart.length > 0 ?
+                    {hasCartItems ?
                         <Col lg={12} className='border-top border-tertiary py-lg-4 py-3'>
                             <nav aria-label="breadcrumb">
                                 <ol className="breadcrumb" style={{ fontSize: '14px' }}>
@@ -97,13 +201,13 @@ const Cart = ({ emptyCart, productDetail, productSpecs }) => {
                             </nav>
                         </Col>
                         : ''}
-                    {cart && cart.length > 0 ?
+                    {hasCartItems ?
                         <div className='mb-3'>
                             <h2 className={`${cartStyles.carttitle} text-uppercase`}>Your cart</h2>
                         </div>
                         : ''
                     }
-                    {cart && cart.length > 0 ?
+                    {hasCartItems ?
                         <Col lg={7} className='mb-lg-0 mb-3'>
                             <div>
                                 <Card className='rounded-4 border border-tertiary'>
@@ -153,7 +257,7 @@ const Cart = ({ emptyCart, productDetail, productSpecs }) => {
                             </div>
                         </Col>
                         : ''}
-                    {cart && cart.length > 0 ?
+                    {hasCartItems ?
                         <Col lg={5}>
                             <Card className='rounded-4 border border-tertiary'>
                                 <Card.Body>
@@ -186,12 +290,64 @@ const Cart = ({ emptyCart, productDetail, productSpecs }) => {
                                             </div>
                                         </Form>
                                     </div>
-                                    <div>
-                                        <Button variant='dark' className={`${cartStyles.checkoutbtn} d-block w-100`}>Go to Checkout <svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M14.7959 4.4541L21.5459 11.2041C21.6508 11.3086 21.734 11.4328 21.7908 11.5696C21.8476 11.7063 21.8768 11.8529 21.8768 12.001C21.8768 12.149 21.8476 12.2957 21.7908 12.4324C21.734 12.5691 21.6508 12.6933 21.5459 12.7979L14.7959 19.5479C14.5846 19.7592 14.2979 19.8779 13.9991 19.8779C13.7002 19.8779 13.4135 19.7592 13.2022 19.5479C12.9908 19.3365 12.8721 19.0499 12.8721 18.751C12.8721 18.4521 12.9908 18.1654 13.2022 17.9541L18.0313 13.125L4.25 13.125C3.95163 13.125 3.66548 13.0065 3.4545 12.7955C3.24353 12.5846 3.125 12.2984 3.125 12C3.125 11.7017 3.24353 11.4155 3.45451 11.2045C3.66548 10.9936 3.95163 10.875 4.25 10.875L18.0313 10.875L13.2013 6.04598C12.9899 5.83463 12.8712 5.54799 12.8712 5.2491C12.8712 4.95022 12.9899 4.66357 13.2013 4.45223C13.4126 4.24088 13.6992 4.12215 13.9981 4.12215C14.297 4.12215 14.5837 4.24088 14.795 4.45223L14.7959 4.4541Z" fill="white" />
-                                        </svg>
+                                    <form onSubmit={handleCheckoutSubmit} className={cartStyles.checkoutform}>
+                                        <div className='mb-3'>
+                                            <h4 className={cartStyles.checkouttitle}>Checkout Details</h4>
+                                            <p className={cartStyles.checkoutsubtitle}>Create a live order and push it into your admin dashboard.</p>
+                                        </div>
+                                        {orderError ? <Alert variant='danger'>{orderError}</Alert> : null}
+                                        <div className={cartStyles.checkoutgrid}>
+                                            <Form.Group controlId="checkoutName">
+                                                <Form.Control name="customerName" value={checkout.customerName} onChange={handleCheckoutChange} type="text" placeholder="Full name" className={cartStyles.checkoutinput} required />
+                                            </Form.Group>
+                                            <Form.Group controlId="checkoutEmail">
+                                                <Form.Control name="customerEmail" value={checkout.customerEmail} onChange={handleCheckoutChange} type="email" placeholder="Email address" className={cartStyles.checkoutinput} required />
+                                            </Form.Group>
+                                            <Form.Group controlId="checkoutPhone">
+                                                <Form.Control name="customerPhone" value={checkout.customerPhone} onChange={handleCheckoutChange} type="text" placeholder="Phone number" className={cartStyles.checkoutinput} required />
+                                            </Form.Group>
+                                            <Form.Group controlId="checkoutDelivery">
+                                                <Form.Select name="deliveryMethod" value={checkout.deliveryMethod} onChange={handleCheckoutChange} className={cartStyles.checkoutinput}>
+                                                    <option value="standard">Standard delivery</option>
+                                                    <option value="express">Express delivery</option>
+                                                    <option value="pickup">Pickup station</option>
+                                                </Form.Select>
+                                            </Form.Group>
+                                            <Form.Group controlId="shippingFullName" className={cartStyles.checkoutfull}>
+                                                <Form.Control name="fullName" value={checkout.fullName} onChange={handleCheckoutChange} type="text" placeholder="Shipping recipient name" className={cartStyles.checkoutinput} />
+                                            </Form.Group>
+                                            <Form.Group controlId="shippingLine1" className={cartStyles.checkoutfull}>
+                                                <Form.Control name="line1" value={checkout.line1} onChange={handleCheckoutChange} type="text" placeholder="Street address" className={cartStyles.checkoutinput} required />
+                                            </Form.Group>
+                                            <Form.Group controlId="shippingLine2" className={cartStyles.checkoutfull}>
+                                                <Form.Control name="line2" value={checkout.line2} onChange={handleCheckoutChange} type="text" placeholder="Apartment, suite, landmark" className={cartStyles.checkoutinput} />
+                                            </Form.Group>
+                                            <Form.Group controlId="shippingCity">
+                                                <Form.Control name="city" value={checkout.city} onChange={handleCheckoutChange} type="text" placeholder="City" className={cartStyles.checkoutinput} required />
+                                            </Form.Group>
+                                            <Form.Group controlId="shippingRegion">
+                                                <Form.Control name="region" value={checkout.region} onChange={handleCheckoutChange} type="text" placeholder="Region / County" className={cartStyles.checkoutinput} required />
+                                            </Form.Group>
+                                            <Form.Group controlId="shippingPostal">
+                                                <Form.Control name="postalCode" value={checkout.postalCode} onChange={handleCheckoutChange} type="text" placeholder="Postal code" className={cartStyles.checkoutinput} />
+                                            </Form.Group>
+                                            <Form.Group controlId="shippingCountry">
+                                                <Form.Control name="country" value={checkout.country} onChange={handleCheckoutChange} type="text" placeholder="Country" className={cartStyles.checkoutinput} required />
+                                            </Form.Group>
+                                        </div>
+                                        <Form.Check
+                                            className={cartStyles.subscribebox}
+                                            type="checkbox"
+                                            id="checkoutSubscribe"
+                                            name="isSubscribed"
+                                            checked={checkout.isSubscribed}
+                                            onChange={handleCheckoutChange}
+                                            label="Send me offers and order updates from House of bore"
+                                        />
+                                        <Button type='submit' variant='dark' className={`${cartStyles.checkoutbtn} d-block w-100`} disabled={submittingOrder}>
+                                            {submittingOrder ? 'Placing Order...' : `Place Order (${totalQty} item${totalQty > 1 ? 's' : ''})`}
                                         </Button>
-                                    </div>
+                                    </form>
                                 </Card.Body>
                             </Card>
                         </Col>

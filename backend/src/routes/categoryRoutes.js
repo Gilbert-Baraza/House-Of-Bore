@@ -5,13 +5,14 @@ const {
   updateCategory,
   deleteCategory
 } = require("../controllers/categoryController");
-const { protectAdmin } = require("../middleware/authMiddleware");
+const { protectAdmin, authorizePermissions } = require("../middleware/authMiddleware");
+const { PERMISSIONS } = require("../utils/permissions");
 
 const router = express.Router();
 
-router.get("/", protectAdmin, listCategories);
-router.post("/", protectAdmin, createCategory);
-router.put("/:id", protectAdmin, updateCategory);
-router.delete("/:id", protectAdmin, deleteCategory);
+router.get("/", protectAdmin, authorizePermissions(PERMISSIONS.CATEGORIES_READ), listCategories);
+router.post("/", protectAdmin, authorizePermissions(PERMISSIONS.CATEGORIES_WRITE), createCategory);
+router.put("/:id", protectAdmin, authorizePermissions(PERMISSIONS.CATEGORIES_WRITE), updateCategory);
+router.delete("/:id", protectAdmin, authorizePermissions(PERMISSIONS.CATEGORIES_WRITE), deleteCategory);
 
 module.exports = router;

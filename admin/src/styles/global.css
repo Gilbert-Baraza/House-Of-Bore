@@ -69,7 +69,7 @@ textarea {
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 18px;
 }
 
@@ -114,6 +114,10 @@ textarea {
   border-radius: 24px;
   padding: 22px;
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.05);
+}
+
+.detail-card {
+  align-content: start;
 }
 
 .chart-wrap {
@@ -178,6 +182,47 @@ textarea {
 
 .form-grid textarea {
   grid-column: span 2;
+}
+
+.field-group {
+  display: grid;
+  gap: 8px;
+  color: #3a4052;
+  font-weight: 600;
+}
+
+.field-group span {
+  font-size: 0.95rem;
+}
+
+.field-group--full {
+  grid-column: span 2;
+}
+
+.form-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #edf0f6;
+}
+
+.form-section:first-of-type {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.form-section__header {
+  margin-bottom: 14px;
+}
+
+.form-section__header h4 {
+  margin: 0 0 6px;
+  color: #1b1c21;
+}
+
+.form-section__header p {
+  margin: 0;
+  color: var(--admin-text-soft);
 }
 
 .toggle-row,
@@ -272,6 +317,158 @@ textarea {
   font-size: 0.92rem;
 }
 
+.toolbar-row {
+  display: grid;
+  grid-template-columns: 1.3fr 0.7fr;
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.detail-stack {
+  display: grid;
+  gap: 20px;
+}
+
+.detail-kpis {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.detail-kpis div,
+.detail-section,
+.upload-field,
+.image-card {
+  border: 1px solid #edf0f6;
+  border-radius: 18px;
+  background: #fbfcfe;
+}
+
+.detail-kpis div {
+  padding: 16px;
+}
+
+.detail-kpis span,
+.detail-section h4,
+.upload-field small,
+.timeline-item span {
+  color: var(--admin-text-soft);
+}
+
+.detail-kpis strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 1.35rem;
+}
+
+.detail-section {
+  padding: 16px;
+}
+
+.detail-section h4 {
+  margin: 0 0 12px;
+  color: #3a4052;
+}
+
+.detail-list,
+.timeline-list {
+  display: grid;
+  gap: 10px;
+}
+
+.detail-list__item,
+.timeline-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #edf0f6;
+}
+
+.detail-list__item:last-child,
+.timeline-item:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.upload-field {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+}
+
+.upload-field span {
+  font-weight: 600;
+}
+
+.upload-field input[type="file"] {
+  padding: 10px;
+  border-style: dashed;
+  background: #fff;
+}
+
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.image-card {
+  display: grid;
+  gap: 10px;
+  padding: 10px;
+}
+
+.image-card img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.image-card--hero {
+  background: linear-gradient(180deg, #fff8ef 0%, #ffffff 100%);
+}
+
+.color-editor {
+  display: grid;
+  grid-template-columns: 1fr 160px auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.color-chip-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.color-chip-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #edf0f6;
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.color-chip-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.color-chip-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  flex-shrink: 0;
+}
+
 .route-loader {
   min-height: 100vh;
   display: grid;
@@ -282,6 +479,24 @@ textarea {
     radial-gradient(circle at top left, rgba(246, 139, 30, 0.18), transparent 30%),
     linear-gradient(180deg, #f5f7fb 0%, #eef2f7 100%);
   font-weight: 600;
+}
+
+.access-notice {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #fff4e5;
+  border: 1px solid #ffd49d;
+}
+
+.access-notice strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.access-notice p {
+  margin: 0;
+  color: #7a5d35;
 }
 
 @media (max-width: 1100px) {
@@ -303,5 +518,11 @@ textarea {
 
   .form-grid textarea {
     grid-column: span 1;
+  }
+
+  .toolbar-row,
+  .detail-kpis,
+  .color-editor {
+    grid-template-columns: 1fr;
   }
 }

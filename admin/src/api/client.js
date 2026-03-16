@@ -1,10 +1,12 @@
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+export const API_ORIGIN = API_URL.replace(/\/api\/?$/, "");
 
 const getToken = () => localStorage.getItem("admin_token");
 
 const request = async (path, options = {}) => {
+  const isFormData = options.body instanceof FormData;
   const headers = {
-    "Content-Type": "application/json",
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
     ...(options.headers || {})
   };
 
@@ -33,5 +35,6 @@ export const apiClient = {
   post: (path, body) => request(path, { method: "POST", body: JSON.stringify(body) }),
   put: (path, body) => request(path, { method: "PUT", body: JSON.stringify(body) }),
   patch: (path, body) => request(path, { method: "PATCH", body: JSON.stringify(body) }),
-  delete: (path) => request(path, { method: "DELETE" })
+  delete: (path) => request(path, { method: "DELETE" }),
+  postForm: (path, formData) => request(path, { method: "POST", body: formData })
 };

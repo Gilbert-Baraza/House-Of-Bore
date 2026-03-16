@@ -1,10 +1,12 @@
 const express = require("express");
-const { listOrders, updateOrderStatus } = require("../controllers/orderController");
-const { protectAdmin } = require("../middleware/authMiddleware");
+const { listOrders, updateOrderStatus, updateOrderDetails } = require("../controllers/orderController");
+const { protectAdmin, authorizePermissions } = require("../middleware/authMiddleware");
+const { PERMISSIONS } = require("../utils/permissions");
 
 const router = express.Router();
 
-router.get("/", protectAdmin, listOrders);
-router.patch("/:id/status", protectAdmin, updateOrderStatus);
+router.get("/", protectAdmin, authorizePermissions(PERMISSIONS.ORDERS_READ), listOrders);
+router.patch("/:id", protectAdmin, authorizePermissions(PERMISSIONS.ORDERS_WRITE), updateOrderDetails);
+router.patch("/:id/status", protectAdmin, authorizePermissions(PERMISSIONS.ORDERS_WRITE), updateOrderStatus);
 
 module.exports = router;

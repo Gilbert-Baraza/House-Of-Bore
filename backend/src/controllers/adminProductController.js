@@ -9,6 +9,7 @@ const listAdminProducts = async (req, res) => {
 const createAdminProduct = async (req, res) => {
   const product = await Product.create({
     ...req.body,
+    galleryImages: req.body.galleryImages || [],
     slug: slugify(req.body.title)
   });
 
@@ -20,6 +21,7 @@ const updateAdminProduct = async (req, res) => {
     req.params.id,
     {
       ...req.body,
+      galleryImages: req.body.galleryImages || [],
       slug: slugify(req.body.title)
     },
     { new: true, runValidators: true }

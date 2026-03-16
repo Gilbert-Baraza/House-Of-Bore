@@ -1,13 +1,26 @@
 const Product = require("../models/Product");
 const Order = require("../models/Order");
 const Category = require("../models/Category");
+const Customer = require("../models/Customer");
 
 const getDashboardStats = async (req, res) => {
-  const [productCount, categoryCount, orderCount, lowStockProducts, recentOrders, revenueData, paidOrders, pendingOrders] =
+  const [
+    productCount,
+    categoryCount,
+    orderCount,
+    customerCount,
+    lowStockProducts,
+    recentOrders,
+    revenueData,
+    paidOrders,
+    pendingOrders,
+    subscribedCustomers
+  ] =
     await Promise.all([
       Product.countDocuments(),
       Category.countDocuments(),
       Order.countDocuments(),
+      Customer.countDocuments(),
       Product.find({ stock: { $lte: 10 } }).sort({ stock: 1 }).limit(5),
       Order.find().sort({ createdAt: -1 }).limit(5),
       Order.aggregate([
@@ -15,7 +28,8 @@ const getDashboardStats = async (req, res) => {
         { $group: { _id: null, revenue: { $sum: "$totalAmount" } } }
       ]),
       Order.countDocuments({ paymentStatus: "paid" }),
-      Order.countDocuments({ status: "pending" })
+      Order.countDocuments({ status: "pending" }),
+      Customer.countDocuments({ isSubscribed: true })
     ]);
 
   res.json({
@@ -25,9 +39,11 @@ const getDashboardStats = async (req, res) => {
         products: productCount,
         categories: categoryCount,
         orders: orderCount,
+        customers: customerCount,
         revenue: revenueData[0]?.revenue || 0,
         paidOrders,
-        pendingOrders
+        pendingOrders,
+        subscribedCustomers
       },
       lowStockProducts,
       recentOrders

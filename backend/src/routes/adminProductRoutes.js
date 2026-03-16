@@ -5,13 +5,14 @@ const {
   updateAdminProduct,
   deleteAdminProduct
 } = require("../controllers/adminProductController");
-const { protectAdmin } = require("../middleware/authMiddleware");
+const { protectAdmin, authorizePermissions } = require("../middleware/authMiddleware");
+const { PERMISSIONS } = require("../utils/permissions");
 
 const router = express.Router();
 
-router.get("/", protectAdmin, listAdminProducts);
-router.post("/", protectAdmin, createAdminProduct);
-router.put("/:id", protectAdmin, updateAdminProduct);
-router.delete("/:id", protectAdmin, deleteAdminProduct);
+router.get("/", protectAdmin, authorizePermissions(PERMISSIONS.PRODUCTS_READ), listAdminProducts);
+router.post("/", protectAdmin, authorizePermissions(PERMISSIONS.PRODUCTS_WRITE), createAdminProduct);
+router.put("/:id", protectAdmin, authorizePermissions(PERMISSIONS.PRODUCTS_WRITE), updateAdminProduct);
+router.delete("/:id", protectAdmin, authorizePermissions(PERMISSIONS.PRODUCTS_WRITE), deleteAdminProduct);
 
 module.exports = router;

@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const AdminUser = require("../models/AdminUser");
+const { getPermissionsForRole } = require("../utils/permissions");
 
 const createToken = (admin) =>
   jwt.sign(
@@ -35,7 +36,8 @@ const loginAdmin = async (req, res) => {
       id: admin._id,
       name: admin.name,
       email: admin.email,
-      role: admin.role
+      role: admin.role,
+      permissions: getPermissionsForRole(admin.role)
     }
   });
 };

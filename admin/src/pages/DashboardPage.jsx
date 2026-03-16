@@ -41,7 +41,8 @@ const DashboardPage = () => {
         <StatCard label="Products" value={stats?.cards?.products ?? "--"} />
         <StatCard label="Categories" value={stats?.cards?.categories ?? "--"} accent="dark" />
         <StatCard label="Orders" value={stats?.cards?.orders ?? "--"} />
-        <StatCard label="Revenue" value={`$${stats?.cards?.revenue ?? 0}`} accent="dark" />
+        <StatCard label="Customers" value={stats?.cards?.customers ?? "--"} accent="dark" />
+        <StatCard label="Revenue" value={`$${stats?.cards?.revenue ?? 0}`} />
       </div>
 
       <div className="content-grid">
@@ -70,6 +71,7 @@ const DashboardPage = () => {
           <div className="mini-stat-list">
             <div><span>Paid orders</span><strong>{stats?.cards?.paidOrders ?? "--"}</strong></div>
             <div><span>Pending orders</span><strong>{stats?.cards?.pendingOrders ?? "--"}</strong></div>
+            <div><span>Subscribed customers</span><strong>{stats?.cards?.subscribedCustomers ?? "--"}</strong></div>
             <div><span>Low stock alerts</span><strong>{stats?.lowStockProducts?.length ?? 0}</strong></div>
           </div>
         </section>

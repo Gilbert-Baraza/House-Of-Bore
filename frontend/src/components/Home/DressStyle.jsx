@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import dressstyleStyles from './DressStyle.module.css'
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
@@ -6,30 +6,59 @@ import Col from 'react-bootstrap/Col';
 import Card from 'react-bootstrap/Card'
 import { Link } from 'react-router-dom'
 import { siteContent } from '../../data/siteContent';
+import { fetchCategories } from '../../api/categories';
 
 const DressStyle = () => {
-    const browseCards = [
+    const [categories, setCategories] = useState([]);
+
+    useEffect(() => {
+        const loadCategories = async () => {
+            try {
+                const results = await fetchCategories();
+                setCategories(results);
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        loadCategories();
+    }, []);
+
+    const fallbackCards = [
         {
-            title: 'Shoes',
-            description: 'Everyday pairs, standout sneakers, and clean finishing touches.',
-            className: dressstyleStyles.dressstylecard1
+            name: 'Shoes',
+            description: 'Everyday pairs, standout sneakers, and clean finishing touches.'
         },
         {
-            title: 'Men',
-            description: 'Sharp essentials and relaxed fits built for daily wear.',
-            className: dressstyleStyles.dressstylecard2
+            name: 'Men',
+            description: 'Sharp essentials and relaxed fits built for daily wear.'
         },
         {
-            title: 'Women',
-            description: 'Bold staples, event-ready looks, and confident everyday style.',
-            className: dressstyleStyles.dressstylecard3
+            name: 'Women',
+            description: 'Bold staples, event-ready looks, and confident everyday style.'
         },
         {
-            title: 'Jeweleries',
-            description: 'Small details that elevate every outfit.',
-            className: dressstyleStyles.dressstylecard4
+            name: 'Jeweleries',
+            description: 'Small details that elevate every outfit.'
         }
     ];
+
+    const cardClasses = [
+        dressstyleStyles.dressstylecard1,
+        dressstyleStyles.dressstylecard2,
+        dressstyleStyles.dressstylecard3,
+        dressstyleStyles.dressstylecard4
+    ];
+
+    const browseCards = useMemo(() => {
+        const source = categories.length ? categories.slice(0, 4) : fallbackCards;
+
+        return source.map((item, index) => ({
+            title: item.name,
+            description: item.description || `Explore the latest styles in ${item.name}.`,
+            className: cardClasses[index % cardClasses.length]
+        }));
+    }, [categories]);
 
     return (
         <section className={dressstyleStyles.dressstylecontainer}>

@@ -9,8 +9,8 @@ import Image from 'react-bootstrap/Image';
 import Form from 'react-bootstrap/Form';
 import { ProductContext } from '../../context/ProductContext';
 import { ProductMoreContext } from '../../context/ProductMoreContext';
-import { categories } from '../../data/catalogData';
 import { fetchProducts } from '../../api/products';
+import { fetchCategories } from '../../api/categories';
 
 const PRODUCTS_PER_PAGE = 6;
 
@@ -20,6 +20,7 @@ const Shop = () => {
     const { setProductID } = useContext(ProductContext);
     const { setProductMore } = useContext(ProductMoreContext);
     const [products, setProducts] = useState([]);
+    const [categories, setCategories] = useState(['All']);
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [sortBy, setSortBy] = useState('featured');
     const [page, setPage] = useState(1);
@@ -42,6 +43,19 @@ const Shop = () => {
             </span>
         );
     });
+
+    useEffect(() => {
+        const loadCategories = async () => {
+            try {
+                const results = await fetchCategories();
+                setCategories(['All', ...results.map((category) => category.name)]);
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        loadCategories();
+    }, []);
 
     useEffect(() => {
         const loadProducts = async () => {

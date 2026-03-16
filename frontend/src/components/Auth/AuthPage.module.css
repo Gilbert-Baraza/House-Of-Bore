@@ -1,0 +1,79 @@
+.authWrapper {
+  min-height: 100vh;
+  padding: 140px 20px 60px;
+  background:
+    radial-gradient(circle at top left, rgba(246, 139, 30, 0.12), transparent 30%),
+    linear-gradient(180deg, #fff9f0 0%, #f6f7fb 100%);
+}
+
+.authCard {
+  max-width: 520px;
+  margin: 0 auto;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 28px;
+  padding: 32px;
+  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.08);
+}
+
+.eyebrow {
+  display: inline-flex;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(246, 139, 30, 0.12);
+  color: #c96c08;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.authTitle {
+  margin: 18px 0 8px;
+  font-size: clamp(28px, 3vw, 38px);
+}
+
+.authText {
+  color: rgba(0, 0, 0, 0.64);
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
+.authForm {
+  display: grid;
+  gap: 16px;
+}
+
+.authActions {
+  display: grid;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.submitBtn {
+  width: 100%;
+  border: 0;
+  border-radius: 18px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #f68b1e 0%, #db770f 100%);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.secondaryLink {
+  color: #1b1c21;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.helperText {
+  color: rgba(0, 0, 0, 0.58);
+  font-size: 14px;
+}
+
+.errorBox {
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: #fdecec;
+  color: #b42318;
+}

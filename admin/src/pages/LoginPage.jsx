@@ -21,6 +21,8 @@ const LoginPage = () => {
       localStorage.setItem("admin_token", payload.token);
       localStorage.setItem("admin_name", payload.data.name);
       localStorage.setItem("admin_email", payload.data.email);
+      localStorage.setItem("admin_role", payload.data.role);
+      localStorage.setItem("admin_permissions", JSON.stringify(payload.data.permissions || []));
       navigate(from, { replace: true });
     } catch (requestError) {
       setError(requestError.message);
