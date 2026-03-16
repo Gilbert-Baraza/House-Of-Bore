@@ -1,0 +1,101 @@
+.dressstylecontainer {
+    margin: 0 50px !important;
+    background: linear-gradient(180deg, #fff7ef 0%, #f5f5f5 100%);
+    border-radius: 25px;
+}
+
+.sectionTag {
+    display: inline-block;
+    margin-bottom: 0.75rem;
+    padding: 0.35rem 0.9rem;
+    border-radius: 999px;
+    background-color: rgba(246, 139, 30, 0.12);
+    color: var(--brand-primary);
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.dressstyletitle {
+    font-size: clamp(36px, 5vw, 48px);
+    color: #000;
+    letter-spacing: -2px;
+}
+
+.sectionText {
+    max-width: 680px;
+    margin: 1rem auto 0;
+    color: rgba(0, 0, 0, 0.65);
+}
+
+.dressstylecard1 {
+    background: url('../../assets/images/dressstyleimg1.png') no-repeat top center;
+    background-size: cover;
+    height: 289px !important;
+    border: 0 !important;
+    border-radius: 25px !important;
+    padding: 15px 20px !important;
+}
+
+.dressstylecard2 {
+    background: url('../../assets/images/dressstyleimg2.png') no-repeat top center;
+    background-size: cover;
+    height: 289px !important;
+    border: 0 !important;
+    border-radius: 25px !important;
+    padding: 15px 20px !important;
+}
+
+.dressstylecard3 {
+    background: url('../../assets/images/dressstyleimg3.png') no-repeat top center;
+    background-size: cover;
+    height: 289px !important;
+    border: 0 !important;
+    border-radius: 25px !important;
+    padding: 15px 20px !important;
+}
+
+.dressstylecard4 {
+    background: url('../../assets/images/dressstyleimg4.png') no-repeat top center;
+    background-size: cover;
+    height: 289px !important;
+    border: 0 !important;
+    border-radius: 25px !important;
+    padding: 15px 20px !important;
+}
+
+.cardOverlay {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    height: 100%;
+    border-radius: 25px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0.45) 100%);
+}
+
+.dressstylecardtitle {
+    font-size: clamp(24px, 3vw, 36px) !important;
+    color: #fff !important;
+    font-weight: bold !important;
+}
+
+.cardText {
+    max-width: 320px;
+    color: rgba(255, 255, 255, 0.88) !important;
+    margin: 0 !important;
+}
+
+@media(max-width:600px) {
+    .dressstylecontainer {
+        margin: 10px !important;
+    }
+
+    .dressstylecard1,
+    .dressstylecard2,
+    .dressstylecard3,
+    .dressstylecard4 {
+        height: 190px !important;
+        padding: 5px !important;
+    }
+}

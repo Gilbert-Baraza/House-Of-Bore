@@ -1,0 +1,45 @@
+.latestoffercontainer {
+    margin: 0 50px !important;
+}
+
+.latestofferbg {
+    background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-dark) 100%);
+    border-radius: 25px;
+}
+
+.latestoffertitle {
+    font-size: clamp(30px, 3vw, 40px);
+    letter-spacing: -2px;
+    line-height: clamp(40px, 5vw, 60px);
+}
+
+.formcontrol {
+    border-radius: 43px !important;
+    border: 0 !important;
+    padding: 12px 50px !important;
+    background: url('../../assets/images/emailicon.png') no-repeat scroll 12px 12px;
+}
+
+.formbtn {
+    border-radius: 43px !important;
+    padding: 12px 24px !important;
+    font-weight: 500 !important;
+    color: var(--brand-primary) !important;
+}
+
+.formcontrol:focus {
+    outline: 0 !important;
+    box-shadow: none !important;
+}
+
+@media(max-width:768px) {
+    .latestoffercontainer {
+        margin: 10px !important;
+    }
+}
+
+@media(max-width:600px) {
+    .latestoffercontainer {
+        margin: 10px !important;
+    }
+}

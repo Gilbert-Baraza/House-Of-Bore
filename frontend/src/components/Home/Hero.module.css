@@ -1,0 +1,203 @@
+.herobg {
+    overflow: hidden;
+    background: linear-gradient(135deg, #fff4e8 0%, #f7f1ea 100%) url('../../assets/images/heroimg1.png') no-repeat center center;
+}
+
+.herocontainer {
+    margin: 0 50px !important;
+}
+
+.herotitle {
+    font-size: clamp(36px, 5vw, 64px);
+    letter-spacing: -3px;
+    color: #000;
+    line-height: clamp(40px, 5vw, 65px);
+}
+
+.eyebrow {
+    display: inline-block;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: rgba(0, 0, 0, 0.6);
+}
+
+.herobtn {
+    width: 210px;
+    height: 52px;
+    background-color: var(--brand-primary) !important;
+    border-color: var(--brand-primary) !important;
+    border-radius: 43px !important;
+    padding: 12px 24px !important;
+}
+
+.herostatstitle {
+    font-size: clamp(24px, 5vw, 40px);
+    color: #000;
+}
+
+.heroimg {
+    /* background: url('../../assets/images/heroimg.png') no-repeat top center;
+    background-size: cover;
+    background-position-x: 100% 75%; */
+    height: 600px;
+}
+
+.brandscon {
+    background-color: var(--brand-ink);
+    padding: 30px 50px;
+    display: flex;
+}
+
+.brandscon>div {
+    margin-right: 100px;
+}
+
+.brandPill {
+    color: #fff;
+    font-size: clamp(0.95rem, 2vw, 1.2rem);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+@media(max-width:1024px) {
+    .brandscon>div {
+        margin-right: 25px;
+    }
+
+    #icon1 {
+        position: absolute;
+        left: 85% !important;
+    }
+
+    #icon1 svg {
+        width: 70px;
+        height: 70px;
+    }
+}
+
+@media(max-width:768px) {
+    .herobg {
+        background: unset;
+        background-color: #F2F0F1;
+    }
+
+    .heroimg {
+        background: url('../../assets/images/heroimg.png') no-repeat top center;
+        background-size: cover;
+        height: 500px;
+    }
+
+    #icon1 {
+        position: absolute;
+        left: 85% !important;
+    }
+
+    #icon1 svg {
+        width: 70px;
+        height: 70px;
+    }
+
+    .brandscon {
+        display: grid !important;
+        grid-template-columns: repeat(6, 1fr);
+        grid-template-rows: 1fr 1fr;
+        gap: 15px;
+        padding: 30px;
+        justify-items: center;
+    }
+
+    .brandscon>div {
+        margin-right: 10px;
+    }
+
+    .brandscon>div>svg {
+        width: 100px;
+        height: 25px;
+    }
+
+    .brandscon>div {
+        grid-column-end: span 2;
+    }
+
+    .brandscon>div:last-child {
+        grid-column-start: 3;
+    }
+
+}
+
+@media(max-width:600px) {
+    .herocontainer {
+        margin: 0 !important;
+    }
+
+    .herobg {
+        background: unset;
+        background-color: #F2F0F1;
+    }
+
+    .heroimg {
+        background: url('../../assets/images/heroimg.png') no-repeat top center;
+        background-size: cover;
+        height: 400px;
+    }
+
+    #icon1 {
+        position: absolute;
+        left: 75% !important;
+    }
+
+    #icon1 svg {
+        width: 70px;
+        height: 70px;
+    }
+
+    #herostats {
+        display: grid !important;
+        grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: 1fr 1fr;
+        gap: 10px;
+        justify-items: center;
+    }
+
+    #herostats>div {
+        grid-column-end: span 2;
+    }
+
+    #herostats>div:last-child {
+        grid-column-start: 2;
+    }
+
+    .brandscon {
+        display: grid !important;
+        grid-template-columns: repeat(6, 1fr);
+        grid-template-rows: 1fr 1fr;
+        gap: 15px;
+        padding: 30px;
+        justify-items: center;
+    }
+
+    .brandscon>div {
+        margin-right: 10px;
+    }
+
+    .brandscon>div>svg {
+        width: 100px;
+        height: 25px;
+    }
+
+    .brandscon>div {
+        grid-column-end: span 2;
+    }
+
+    .brandscon>div:last-child {
+        grid-column-start: 3;
+    }
+
+    .herobtn {
+        width: 100%;
+    }
+}
