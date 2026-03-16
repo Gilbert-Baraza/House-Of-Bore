@@ -24,6 +24,7 @@ import { AuthProvider } from './context/AuthContext';
 import SignIn from './components/Auth/SignIn';
 import SignUp from './components/Auth/SignUp';
 import Account from './components/Auth/Account';
+import TrackOrder from './components/Auth/TrackOrder';
 
 
 function App() {
@@ -116,6 +117,13 @@ function App() {
                         element={<div>
                           <TopNav />
                           <Account />
+                          <Footer />
+                        </div>}>
+                      </Route>
+                      <Route path='/track-order'
+                        element={<div>
+                          <TopNav />
+                          <TrackOrder />
                           <Footer />
                         </div>}>
                       </Route>

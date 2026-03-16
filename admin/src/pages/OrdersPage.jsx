@@ -6,9 +6,59 @@ import StatCard from "../components/ui/StatCard";
 import AccessNotice from "../components/ui/AccessNotice";
 import { hasPermission } from "../utils/permissions";
 
-const orderStatuses = ["pending", "paid", "processing", "packed", "shipped", "delivered", "cancelled"];
+const orderStatuses = ["unpaid", "to_be_shipped", "shipped", "out_for_delivery", "completed", "cancelled", "returned"];
 const paymentStatuses = ["pending", "paid", "failed", "refunded"];
 const deliveryMethods = ["standard", "express", "pickup"];
+const formatStatusLabel = (value) => {
+  if (!value) {
+    return "--";
+  }
+
+  return value
+    .split("_")
+    .join(" ")
+    .replace(/\b\w/g, (character) => character.toUpperCase());
+};
+
+const formatTimelineDate = (value) => {
+  if (!value) {
+    return "Just now";
+  }
+
+  return new Date(value).toLocaleString();
+};
+
+const formatDeliveryDate = (value) => {
+  if (!value) {
+    return "Not scheduled";
+  }
+
+  return new Date(value).toLocaleDateString();
+};
+
+const getStatusBadgeClassName = (value) => {
+  switch (value) {
+    case "unpaid":
+    case "pending":
+      return "status-badge status-badge--warning";
+    case "to_be_shipped":
+      return "status-badge status-badge--accent";
+    case "shipped":
+    case "out_for_delivery":
+      return "status-badge status-badge--info";
+    case "completed":
+    case "paid":
+      return "status-badge status-badge--success";
+    case "cancelled":
+    case "failed":
+      return "status-badge status-badge--danger";
+    case "returned":
+    case "refunded":
+      return "status-badge status-badge--muted";
+    default:
+      return "status-badge";
+  }
+};
 
 const OrdersPage = () => {
   const canWrite = hasPermission("orders:write");
@@ -17,10 +67,16 @@ const OrdersPage = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [draft, setDraft] = useState({
+    status: "unpaid",
+    paymentStatus: "pending",
     deliveryMethod: "standard",
+    courierName: "",
     trackingNumber: "",
+    courierTrackingUrl: "",
+    estimatedDeliveryDate: "",
     fulfillmentNotes: "",
-    internalNote: ""
+    internalNote: "",
+    trackingUpdate: ""
   });
 
   const loadOrders = async () => {
@@ -54,10 +110,18 @@ const OrdersPage = () => {
 
     setSelectedOrder(refreshed);
     setDraft({
+      status: refreshed.status || "unpaid",
+      paymentStatus: refreshed.paymentStatus || "pending",
       deliveryMethod: refreshed.deliveryMethod || "standard",
+      courierName: refreshed.courierName || "",
       trackingNumber: refreshed.trackingNumber || "",
+      courierTrackingUrl: refreshed.courierTrackingUrl || "",
+      estimatedDeliveryDate: refreshed.estimatedDeliveryDate
+        ? new Date(refreshed.estimatedDeliveryDate).toISOString().slice(0, 10)
+        : "",
       fulfillmentNotes: refreshed.fulfillmentNotes || "",
-      internalNote: refreshed.internalNote || ""
+      internalNote: refreshed.internalNote || "",
+      trackingUpdate: ""
     });
   }, [orders, selectedOrder?._id]);
 
@@ -80,9 +144,23 @@ const OrdersPage = () => {
     await loadOrders();
   };
 
+  const handleSaveTrackingUpdate = async () => {
+    if (!selectedOrder?._id) {
+      return;
+    }
+
+    await apiClient.patch(`/admin/orders/${selectedOrder._id}/status`, {
+      status: draft.status,
+      paymentStatus: draft.paymentStatus,
+      customerUpdate: draft.trackingUpdate
+    });
+
+    await loadOrders();
+  };
+
   const paidCount = orders.filter((order) => order.paymentStatus === "paid").length;
-  const openCount = orders.filter((order) => ["pending", "processing", "packed"].includes(order.status)).length;
-  const shippedCount = orders.filter((order) => order.status === "shipped").length;
+  const openCount = orders.filter((order) => ["unpaid", "to_be_shipped"].includes(order.status)).length;
+  const shippedCount = orders.filter((order) => ["shipped", "out_for_delivery"].includes(order.status)).length;
   const orderRevenue = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
 
   return (
@@ -96,7 +174,7 @@ const OrdersPage = () => {
         <StatCard label="Orders" value={orders.length} />
         <StatCard label="Paid" value={paidCount} accent="dark" />
         <StatCard label="Open fulfillment" value={openCount} />
-        <StatCard label="Shipped" value={shippedCount} accent="dark" />
+        <StatCard label="In transit" value={shippedCount} accent="dark" />
         <StatCard label="Revenue" value={`$${orderRevenue}`} />
       </div>
 
@@ -129,7 +207,7 @@ const OrdersPage = () => {
                   <option value="all">All statuses</option>
                   {orderStatuses.map((status) => (
                     <option key={status} value={status}>
-                      {status}
+                      {formatStatusLabel(status)}
                     </option>
                   ))}
                 </select>
@@ -161,34 +239,40 @@ const OrdersPage = () => {
                   key: "status",
                   label: "Fulfillment",
                   render: (row) => (
-                    <select
-                      disabled={!canWrite}
-                      value={row.status}
-                      onChange={(event) => handleStatusChange(row, { status: event.target.value })}
-                    >
-                      {orderStatuses.map((status) => (
-                        <option key={status} value={status}>
-                          {status}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="status-cell">
+                      <span className={getStatusBadgeClassName(row.status)}>{formatStatusLabel(row.status)}</span>
+                      <select
+                        disabled={!canWrite}
+                        value={row.status}
+                        onChange={(event) => handleStatusChange(row, { status: event.target.value })}
+                      >
+                        {orderStatuses.map((status) => (
+                          <option key={status} value={status}>
+                            {formatStatusLabel(status)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   )
                 },
                 {
                   key: "paymentStatus",
                   label: "Payment",
                   render: (row) => (
-                    <select
-                      disabled={!canWrite}
-                      value={row.paymentStatus}
-                      onChange={(event) => handleStatusChange(row, { paymentStatus: event.target.value })}
-                    >
-                      {paymentStatuses.map((status) => (
-                        <option key={status} value={status}>
-                          {status}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="status-cell">
+                      <span className={getStatusBadgeClassName(row.paymentStatus)}>{formatStatusLabel(row.paymentStatus)}</span>
+                      <select
+                        disabled={!canWrite}
+                        value={row.paymentStatus}
+                        onChange={(event) => handleStatusChange(row, { paymentStatus: event.target.value })}
+                      >
+                        {paymentStatuses.map((status) => (
+                          <option key={status} value={status}>
+                            {formatStatusLabel(status)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   )
                 },
                 {
@@ -224,6 +308,75 @@ const OrdersPage = () => {
                   <span>Items</span>
                   <strong>{selectedOrder.items?.reduce((sum, item) => sum + item.quantity, 0) || 0}</strong>
                 </div>
+                <div>
+                  <span>Status</span>
+                  <strong>
+                    <span className={getStatusBadgeClassName(selectedOrder.status)}>{formatStatusLabel(selectedOrder.status)}</span>
+                  </strong>
+                </div>
+                <div>
+                  <span>Payment</span>
+                  <strong>
+                    <span className={getStatusBadgeClassName(selectedOrder.paymentStatus)}>{formatStatusLabel(selectedOrder.paymentStatus)}</span>
+                  </strong>
+                </div>
+                <div>
+                  <span>ETA</span>
+                  <strong>{formatDeliveryDate(selectedOrder.estimatedDeliveryDate)}</strong>
+                </div>
+              </div>
+
+              <div className="form-section">
+                <div className="form-section__header">
+                  <h4>Tracking & Status</h4>
+                  <p>Control the customer-facing status, payment state, and timeline updates shown on order tracking.</p>
+                </div>
+                <div className="detail-section">
+                  <div className="form-grid form-grid--single">
+                    <label className="field-group">
+                      <span>Fulfillment status</span>
+                      <select
+                        disabled={!canWrite}
+                        value={draft.status}
+                        onChange={(event) => setDraft((previous) => ({ ...previous, status: event.target.value }))}
+                      >
+                        {orderStatuses.map((status) => (
+                          <option key={status} value={status}>
+                            {formatStatusLabel(status)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="field-group">
+                      <span>Payment status</span>
+                      <select
+                        disabled={!canWrite}
+                        value={draft.paymentStatus}
+                        onChange={(event) => setDraft((previous) => ({ ...previous, paymentStatus: event.target.value }))}
+                      >
+                        {paymentStatuses.map((status) => (
+                          <option key={status} value={status}>
+                            {formatStatusLabel(status)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="field-group">
+                      <span>Customer-facing tracking update</span>
+                      <textarea
+                        disabled={!canWrite}
+                        placeholder="Example: Courier picked up the parcel and delivery is expected tomorrow."
+                        value={draft.trackingUpdate}
+                        onChange={(event) => setDraft((previous) => ({ ...previous, trackingUpdate: event.target.value }))}
+                      />
+                    </label>
+                  </div>
+                  <div className="form-actions">
+                    <button disabled={!canWrite} type="button" className="primary-button" onClick={handleSaveTrackingUpdate}>
+                      Save tracking update
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div className="form-section">
@@ -235,7 +388,9 @@ const OrdersPage = () => {
                   <div className="detail-list">
                     <div className="detail-list__item"><span>Email</span><strong>{selectedOrder.customerEmail}</strong></div>
                     <div className="detail-list__item"><span>Phone</span><strong>{selectedOrder.customerPhone || "--"}</strong></div>
-                    <div className="detail-list__item"><span>Delivery</span><strong>{selectedOrder.deliveryMethod}</strong></div>
+                    <div className="detail-list__item"><span>Delivery</span><strong>{formatStatusLabel(selectedOrder.deliveryMethod)}</strong></div>
+                    <div className="detail-list__item"><span>Courier</span><strong>{selectedOrder.courierName || "--"}</strong></div>
+                    <div className="detail-list__item"><span>Estimated delivery</span><strong>{formatDeliveryDate(selectedOrder.estimatedDeliveryDate)}</strong></div>
                   </div>
                 </div>
               </div>
@@ -268,6 +423,37 @@ const OrdersPage = () => {
                         placeholder="Enter courier tracking number"
                         value={draft.trackingNumber}
                         onChange={(event) => setDraft((previous) => ({ ...previous, trackingNumber: event.target.value }))}
+                      />
+                    </label>
+                    <label className="field-group">
+                      <span>Courier name</span>
+                      <input
+                        disabled={!canWrite}
+                        placeholder="Example: DHL, G4S, Fargo"
+                        value={draft.courierName}
+                        onChange={(event) => setDraft((previous) => ({ ...previous, courierName: event.target.value }))}
+                      />
+                    </label>
+                    <label className="field-group">
+                      <span>Courier tracking link</span>
+                      <input
+                        disabled={!canWrite}
+                        placeholder="https://courier.example/track/123"
+                        value={draft.courierTrackingUrl}
+                        onChange={(event) =>
+                          setDraft((previous) => ({ ...previous, courierTrackingUrl: event.target.value }))
+                        }
+                      />
+                    </label>
+                    <label className="field-group">
+                      <span>Estimated delivery date</span>
+                      <input
+                        disabled={!canWrite}
+                        type="date"
+                        value={draft.estimatedDeliveryDate}
+                        onChange={(event) =>
+                          setDraft((previous) => ({ ...previous, estimatedDeliveryDate: event.target.value }))
+                        }
                       />
                     </label>
                     <label className="field-group">
@@ -347,8 +533,13 @@ const OrdersPage = () => {
                   <div className="timeline-list">
                     {(selectedOrder.statusTimeline || []).map((item, index) => (
                       <div key={`${item.status}-${index}`} className="timeline-item">
-                        <strong>{item.status}</strong>
-                        <span>{item.note || "Status updated"}</span>
+                        <div>
+                          <strong>
+                            <span className={getStatusBadgeClassName(item.status)}>{formatStatusLabel(item.status)}</span>
+                          </strong>
+                          <div className="muted-copy">{item.note || "Status updated"}</div>
+                        </div>
+                        <span>{formatTimelineDate(item.changedAt)}</span>
                       </div>
                     ))}
                   </div>

@@ -317,6 +317,57 @@ textarea {
   font-size: 0.92rem;
 }
 
+.status-cell {
+  display: grid;
+  gap: 8px;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-height: 32px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  background: #eef2f8;
+  color: #344054;
+}
+
+.status-badge--warning {
+  background: #fff4dd;
+  color: #9a6700;
+}
+
+.status-badge--accent {
+  background: #fff1e5;
+  color: #c96c08;
+}
+
+.status-badge--info {
+  background: #e7f0ff;
+  color: #1d4ed8;
+}
+
+.status-badge--success {
+  background: #e8f8ee;
+  color: #157347;
+}
+
+.status-badge--danger {
+  background: #fdecec;
+  color: #b42318;
+}
+
+.status-badge--muted {
+  background: #f2f4f7;
+  color: #667085;
+}
+
 .toolbar-row {
   display: grid;
   grid-template-columns: 1.3fr 0.7fr;

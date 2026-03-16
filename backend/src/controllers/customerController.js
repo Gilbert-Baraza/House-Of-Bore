@@ -1,5 +1,6 @@
 const Customer = require("../models/Customer");
 const Order = require("../models/Order");
+const { normalizeOrderStatus } = require("../utils/orderStatus");
 
 const listCustomers = async (req, res) => {
   const customers = await Customer.find().sort({ lastOrderAt: -1, createdAt: -1 });
@@ -8,7 +9,14 @@ const listCustomers = async (req, res) => {
 
 const getCustomerOrders = async (req, res) => {
   const orders = await Order.find({ customer: req.params.id }).sort({ createdAt: -1 });
-  res.json({ success: true, count: orders.length, data: orders });
+  res.json({
+    success: true,
+    count: orders.length,
+    data: orders.map((order) => ({
+      ...order.toObject(),
+      status: normalizeOrderStatus(order.status, order.paymentStatus)
+    }))
+  });
 };
 
 const updateCustomer = async (req, res) => {

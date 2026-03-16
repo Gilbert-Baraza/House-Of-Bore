@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { ORDER_STATUSES } = require("../utils/orderStatus");
 
 const orderItemSchema = new mongoose.Schema(
   {
@@ -44,8 +45,8 @@ const orderSchema = new mongoose.Schema(
     customerPhone: { type: String, default: "", trim: true },
     status: {
       type: String,
-      enum: ["pending", "paid", "processing", "packed", "shipped", "delivered", "cancelled"],
-      default: "pending"
+      enum: ORDER_STATUSES,
+      default: "unpaid"
     },
     paymentStatus: {
       type: String,
@@ -57,7 +58,10 @@ const orderSchema = new mongoose.Schema(
       enum: ["standard", "express", "pickup"],
       default: "standard"
     },
+    courierName: { type: String, default: "", trim: true },
     trackingNumber: { type: String, default: "", trim: true },
+    courierTrackingUrl: { type: String, default: "", trim: true },
+    estimatedDeliveryDate: { type: Date, default: null },
     fulfillmentNotes: { type: String, default: "", trim: true },
     internalNote: { type: String, default: "", trim: true },
     shippingAddress: { type: shippingAddressSchema, default: () => ({}) },

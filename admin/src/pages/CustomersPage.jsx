@@ -6,6 +6,17 @@ import DataTable from "../components/ui/DataTable";
 import AccessNotice from "../components/ui/AccessNotice";
 import { hasPermission } from "../utils/permissions";
 
+const formatStatusLabel = (value) => {
+  if (!value) {
+    return "--";
+  }
+
+  return value
+    .split("_")
+    .join(" ")
+    .replace(/\b\w/g, (character) => character.toUpperCase());
+};
+
 const emptyDraft = {
   tier: "new",
   isSubscribed: false,
@@ -231,7 +242,7 @@ const CustomersPage = () => {
                         <div>
                           <strong>{order.orderNumber}</strong>
                           <div className="muted-copy">
-                            {order.status} / {order.paymentStatus}
+                            {formatStatusLabel(order.status)} / {formatStatusLabel(order.paymentStatus)}
                           </div>
                         </div>
                         <span>${order.totalAmount}</span>

@@ -127,6 +127,11 @@ const TopNav = () => {
                     {isAuthenticated ? 'My Account' : 'Sign In'}
                   </Link>
                 </li>
+                <li className='py-2'>
+                  <Link to='/track-order' className='text-decoration-none text-dark'>
+                    Track Order
+                  </Link>
+                </li>
                 {isAuthenticated ? (
                   <li className='py-2'>
                     <button type="button" className='border-0 bg-transparent p-0 text-dark' onClick={signOut}>
@@ -178,6 +183,11 @@ const TopNav = () => {
               <span className='me-lg-3 text-dark'>
                 <Link to={isAuthenticated ? '/account' : '/signin'} className='text-decoration-none text-dark'>
                   {isAuthenticated ? customer?.name?.split(' ')[0] || 'Account' : 'Sign In'}
+                </Link>
+              </span>
+              <span className='me-lg-3 text-dark'>
+                <Link to='/track-order' className='text-decoration-none text-dark'>
+                  Track Order
                 </Link>
               </span>
             </Form>

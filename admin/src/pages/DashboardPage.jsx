@@ -5,6 +5,17 @@ import PageHeader from "../components/ui/PageHeader";
 import StatCard from "../components/ui/StatCard";
 import DataTable from "../components/ui/DataTable";
 
+const formatStatusLabel = (value) => {
+  if (!value) {
+    return "--";
+  }
+
+  return value
+    .split("_")
+    .join(" ")
+    .replace(/\b\w/g, (character) => character.toUpperCase());
+};
+
 const revenueTrend = [
   { month: "Jan", sales: 1200 },
   { month: "Feb", sales: 1800 },
@@ -70,7 +81,7 @@ const DashboardPage = () => {
           </div>
           <div className="mini-stat-list">
             <div><span>Paid orders</span><strong>{stats?.cards?.paidOrders ?? "--"}</strong></div>
-            <div><span>Pending orders</span><strong>{stats?.cards?.pendingOrders ?? "--"}</strong></div>
+            <div><span>Unpaid orders</span><strong>{stats?.cards?.unpaidOrders ?? "--"}</strong></div>
             <div><span>Subscribed customers</span><strong>{stats?.cards?.subscribedCustomers ?? "--"}</strong></div>
             <div><span>Low stock alerts</span><strong>{stats?.lowStockProducts?.length ?? 0}</strong></div>
           </div>
@@ -85,7 +96,7 @@ const DashboardPage = () => {
               columns={[
                 { key: "orderNumber", label: "Order" },
                 { key: "customerName", label: "Customer" },
-                { key: "status", label: "Status" },
+                { key: "status", label: "Status", render: (row) => formatStatusLabel(row.status) },
                 { key: "totalAmount", label: "Total", render: (row) => `$${row.totalAmount}` }
               ]}
               rows={stats?.recentOrders || []}

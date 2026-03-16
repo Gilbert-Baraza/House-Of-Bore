@@ -40,3 +40,6 @@ export const updateCustomerProfile = (body) =>
   request("/customer/auth/me", { method: "PUT", body: JSON.stringify(body) });
 
 export const fetchMyOrders = () => request("/customer/orders/me");
+export const fetchMyOrderById = (id) => request(`/customer/orders/me/${id}`);
+export const trackOrder = ({ orderNumber, email }) =>
+  request(`/orders/track?orderNumber=${encodeURIComponent(orderNumber)}&email=${encodeURIComponent(email)}`);

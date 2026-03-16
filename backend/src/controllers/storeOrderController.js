@@ -1,6 +1,7 @@
 const Customer = require("../models/Customer");
 const Order = require("../models/Order");
 const { buildOrderNumber, reserveOrderStock, syncCustomerMetrics } = require("../utils/orderHelpers");
+const { normalizeTimelineStatus } = require("../utils/orderStatus");
 
 const createStoreOrder = async (req, res) => {
   const {
@@ -57,13 +58,13 @@ const createStoreOrder = async (req, res) => {
     customerName,
     customerEmail: customer.email,
     customerPhone: customerPhone || "",
-    status: "pending",
+    status: "unpaid",
     paymentStatus: "pending",
     deliveryMethod,
     shippingAddress: shippingAddress || {},
     totalAmount,
     items: normalizedItems,
-    statusTimeline: [{ status: "pending", note: "Order placed from storefront checkout" }]
+    statusTimeline: [{ status: normalizeTimelineStatus("unpaid"), note: "Order placed from storefront checkout" }]
   });
 
   await syncCustomerMetrics(customer._id);

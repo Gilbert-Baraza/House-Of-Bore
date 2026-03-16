@@ -2,6 +2,7 @@ const Product = require("../models/Product");
 const Order = require("../models/Order");
 const Category = require("../models/Category");
 const Customer = require("../models/Customer");
+const { normalizeOrderStatus } = require("../utils/orderStatus");
 
 const getDashboardStats = async (req, res) => {
   const [
@@ -13,7 +14,7 @@ const getDashboardStats = async (req, res) => {
     recentOrders,
     revenueData,
     paidOrders,
-    pendingOrders,
+    unpaidOrders,
     subscribedCustomers
   ] =
     await Promise.all([
@@ -28,9 +29,11 @@ const getDashboardStats = async (req, res) => {
         { $group: { _id: null, revenue: { $sum: "$totalAmount" } } }
       ]),
       Order.countDocuments({ paymentStatus: "paid" }),
-      Order.countDocuments({ status: "pending" }),
+      Order.find({}, { status: 1, paymentStatus: 1 }).lean(),
       Customer.countDocuments({ isSubscribed: true })
     ]);
+
+  const unpaidOrderCount = unpaidOrders.filter((order) => normalizeOrderStatus(order.status, order.paymentStatus) === "unpaid").length;
 
   res.json({
     success: true,
@@ -42,11 +45,14 @@ const getDashboardStats = async (req, res) => {
         customers: customerCount,
         revenue: revenueData[0]?.revenue || 0,
         paidOrders,
-        pendingOrders,
+        unpaidOrders: unpaidOrderCount,
         subscribedCustomers
       },
       lowStockProducts,
-      recentOrders
+      recentOrders: recentOrders.map((order) => ({
+        ...order.toObject(),
+        status: normalizeOrderStatus(order.status, order.paymentStatus)
+      }))
     }
   });
 };

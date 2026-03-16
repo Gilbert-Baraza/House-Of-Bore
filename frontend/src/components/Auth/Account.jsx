@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
@@ -7,6 +7,41 @@ import Card from "react-bootstrap/Card";
 import Form from "react-bootstrap/Form";
 import { AuthContext } from "../../context/AuthContext";
 import authStyles from "./AuthPage.module.css";
+
+const formatStatusLabel = (value) => {
+  if (!value) {
+    return "--";
+  }
+
+  return value
+    .split("_")
+    .join(" ")
+    .replace(/\b\w/g, (character) => character.toUpperCase());
+};
+
+const getStatusBadgeClassName = (value) => {
+  switch (value) {
+    case "unpaid":
+    case "pending":
+      return `${authStyles.orderBadge} ${authStyles.orderBadgeWarning}`;
+    case "to_be_shipped":
+      return `${authStyles.orderBadge} ${authStyles.orderBadgeAccent}`;
+    case "shipped":
+    case "out_for_delivery":
+      return `${authStyles.orderBadge} ${authStyles.orderBadgeInfo}`;
+    case "completed":
+    case "paid":
+      return `${authStyles.orderBadge} ${authStyles.orderBadgeSuccess}`;
+    case "cancelled":
+    case "failed":
+      return `${authStyles.orderBadge} ${authStyles.orderBadgeDanger}`;
+    case "returned":
+    case "refunded":
+      return `${authStyles.orderBadge} ${authStyles.orderBadgeMuted}`;
+    default:
+      return authStyles.orderBadge;
+  }
+};
 
 const Account = () => {
   const { customer, orders, isAuthenticated, saveProfile, refreshOrders, signOut } = useContext(AuthContext);
@@ -118,10 +153,21 @@ const Account = () => {
                   <div className={authStyles.helperText}>No orders yet. Your first signed-in checkout will appear here.</div>
                 ) : (
                   orders.map((order) => (
-                    <div key={order._id} className={authStyles.errorBox} style={{ background: "#f6f7fb", color: "#1b1c21" }}>
+                    <div key={order._id} className={authStyles.orderCard}>
                       <strong>{order.orderNumber}</strong>
-                      <div className={authStyles.helperText}>{order.status} / {order.paymentStatus}</div>
+                      <div className={authStyles.orderBadgeRow}>
+                        <span className={getStatusBadgeClassName(order.status)}>{formatStatusLabel(order.status)}</span>
+                        <span className={getStatusBadgeClassName(order.paymentStatus)}>{formatStatusLabel(order.paymentStatus)}</span>
+                      </div>
                       <div className={authStyles.helperText}>${order.totalAmount}</div>
+                      <div style={{ marginTop: "10px" }}>
+                        <Link
+                          to={`/track-order?orderNumber=${encodeURIComponent(order.orderNumber)}&email=${encodeURIComponent(order.customerEmail)}`}
+                          className={authStyles.secondaryLink}
+                        >
+                          Track this order
+                        </Link>
+                      </div>
                     </div>
                   ))
                 )}

@@ -78,7 +78,7 @@ const runSeed = async () => {
         customerName: customers[0].name,
         customerEmail: customers[0].email,
         customerPhone: customers[0].phone,
-        status: "processing",
+        status: "to_be_shipped",
         paymentStatus: "paid",
         deliveryMethod: "express",
         trackingNumber: "HOB-EXP-8841",
@@ -86,8 +86,8 @@ const runSeed = async () => {
         internalNote: "VIP customer, confirm courier handoff.",
         shippingAddress: customers[0].defaultAddress,
         statusTimeline: [
-          { status: "pending", note: "Order created" },
-          { status: "processing", note: "Payment confirmed and stock allocated" }
+          { status: "unpaid", note: "Order created" },
+          { status: "to_be_shipped", note: "Payment confirmed and stock allocated" }
         ],
         totalAmount: products[0].discountedPrice + products[3].discountedPrice,
         items: [
@@ -113,13 +113,13 @@ const runSeed = async () => {
         customerName: customers[1].name,
         customerEmail: customers[1].email,
         customerPhone: customers[1].phone,
-        status: "pending",
+        status: "unpaid",
         paymentStatus: "pending",
         deliveryMethod: "standard",
         fulfillmentNotes: "Awaiting payment confirmation before picking.",
         internalNote: "Hold stock for 24 hours.",
         shippingAddress: customers[1].defaultAddress,
-        statusTimeline: [{ status: "pending", note: "Order created" }],
+        statusTimeline: [{ status: "unpaid", note: "Order created" }],
         totalAmount: products[1].discountedPrice * 2,
         items: [
           {
@@ -145,9 +145,9 @@ const runSeed = async () => {
         internalNote: "Send follow-up review request after delivery.",
         shippingAddress: customers[2].defaultAddress,
         statusTimeline: [
-          { status: "pending", note: "Order created" },
-          { status: "processing", note: "Prepared by warehouse" },
-          { status: "packed", note: "Packed and labeled" },
+          { status: "unpaid", note: "Order created" },
+          { status: "to_be_shipped", note: "Prepared by warehouse" },
+          { status: "to_be_shipped", note: "Packed and labeled" },
           { status: "shipped", note: "Handed to courier" }
         ],
         totalAmount: products[2].discountedPrice,
