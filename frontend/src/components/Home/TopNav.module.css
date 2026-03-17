@@ -37,18 +37,168 @@
     padding: 12px 20px 12px 45px !important;
     box-shadow: none !important;
     outline: none !important;
-    width: 550px !important;
+    width: min(420px, 100%) !important;
+}
+
+.iconLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #111111;
+    font-weight: 600;
+}
+
+.iconLink svg {
+    flex-shrink: 0;
+}
+
+.iconOnlyLink {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 999px;
+    color: #111111;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.iconOnlyLink:hover {
+    background-color: #fff7ef;
+    color: var(--brand-primary);
+}
+
+.iconOnlyLink svg {
+    flex-shrink: 0;
+}
+
+.mobileActions {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.desktopActions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-left: 12px;
+}
+
+.navSearchWrap {
+    display: flex;
+    align-items: center;
+    position: relative;
+    width: auto;
+    flex: 0 1 420px;
+    justify-content: flex-end;
+}
+
+.searchDropdown {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    width: min(460px, 100vw - 32px);
+    padding: 10px;
+    border-radius: 22px;
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+    display: grid;
+    gap: 6px;
+    z-index: 30;
+}
+
+.searchResult {
+    width: 100%;
+    border: 0;
+    border-radius: 18px;
+    background: #ffffff;
+    display: grid;
+    grid-template-columns: 54px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    text-align: left;
+}
+
+.searchResult:hover {
+    background: #fff7ef;
+}
+
+.searchThumb {
+    width: 54px;
+    height: 54px;
+    object-fit: cover;
+    border-radius: 14px;
+}
+
+.searchMeta {
+    display: grid;
+    min-width: 0;
+}
+
+.searchMeta strong {
+    font-size: 14px;
+    color: #111111;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.searchMeta span {
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.56);
+}
+
+.searchPrice {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--brand-primary);
+}
+
+.searchViewAll {
+    border: 0;
+    background: #fff7ef;
+    color: var(--brand-primary);
+    border-radius: 16px;
+    padding: 12px 14px;
+    font-weight: 700;
+}
+
+.searchEmpty {
+    padding: 14px;
+    border-radius: 16px;
+    background: #fff7ef;
+    color: rgba(0, 0, 0, 0.62);
+    font-size: 14px;
 }
 
 @media(max-width:1024px) {
     .navsearch {
-        width: auto !important;
+        width: min(320px, 100%) !important;
     }
 }
 
 @media(max-width:768px) {
     .navcontainer {
         margin: 10px !important;
+    }
+
+    .navSearchWrap {
+        width: auto;
+        gap: 10px;
+    }
+
+    .searchDropdown {
+        left: 0;
+        right: auto;
+        width: min(420px, calc(100vw - 32px));
+    }
+
+    .desktopActions {
+        margin-left: 10px;
     }
 }
 

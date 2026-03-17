@@ -162,6 +162,17 @@
     border-color: #f68b1e !important;
 }
 
+.checkoutinputInvalid {
+    border-color: #b42318 !important;
+    box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.14) !important;
+}
+
+.fieldError {
+    margin-top: 6px;
+    color: #b42318;
+    font-size: 13px;
+}
+
 .subscribebox {
     margin-bottom: 16px;
     color: rgba(0, 0, 0, 0.72);

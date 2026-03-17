@@ -11,11 +11,29 @@ const initialForm = {
   isFeatured: false
 };
 
+const requiredIndicator = <span className="field-label-required">*</span>;
+const focusField = (fieldName) => {
+  if (!fieldName || typeof document === "undefined") {
+    return;
+  }
+
+  const element = document.querySelector(`[data-field="${fieldName}"]`);
+
+  if (!element) {
+    return;
+  }
+
+  element.scrollIntoView({ behavior: "smooth", block: "center" });
+  element.focus?.();
+};
+
 const CategoriesPage = () => {
   const canWrite = hasPermission("categories:write");
   const [categories, setCategories] = useState([]);
   const [form, setForm] = useState(initialForm);
   const [editingId, setEditingId] = useState("");
+  const [feedback, setFeedback] = useState({ type: "", message: "" });
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const loadCategories = async () => {
     const payload = await apiClient.get("/admin/categories");
@@ -29,19 +47,43 @@ const CategoriesPage = () => {
   const resetForm = () => {
     setForm(initialForm);
     setEditingId("");
+    setFieldErrors({});
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setFeedback({ type: "", message: "" });
+    const nextErrors = {};
 
-    if (editingId) {
-      await apiClient.put(`/admin/categories/${editingId}`, form);
-    } else {
-      await apiClient.post("/admin/categories", form);
+    if (!form.name.trim()) {
+      nextErrors.name = "Category name is required.";
     }
 
-    resetForm();
-    await loadCategories();
+    if (Object.keys(nextErrors).length) {
+      setFieldErrors(nextErrors);
+      setFeedback({ type: "error", message: "Please fill in all required fields." });
+      focusField(Object.keys(nextErrors)[0]);
+      return;
+    }
+
+    setFieldErrors({});
+
+    try {
+      if (editingId) {
+        await apiClient.put(`/admin/categories/${editingId}`, form);
+      } else {
+        await apiClient.post("/admin/categories", form);
+      }
+
+      setFeedback({
+        type: "success",
+        message: editingId ? "Category updated successfully." : "Category created successfully."
+      });
+      resetForm();
+      await loadCategories();
+    } catch (error) {
+      setFeedback({ type: "error", message: error.message || "Unable to save category." });
+    }
   };
 
   const handleEdit = (category) => {
@@ -54,8 +96,15 @@ const CategoriesPage = () => {
   };
 
   const handleDelete = async (id) => {
-    await apiClient.delete(`/admin/categories/${id}`);
-    await loadCategories();
+    setFeedback({ type: "", message: "" });
+
+    try {
+      await apiClient.delete(`/admin/categories/${id}`);
+      setFeedback({ type: "success", message: "Category deleted successfully." });
+      await loadCategories();
+    } catch (error) {
+      setFeedback({ type: "error", message: error.message || "Unable to delete category." });
+    }
   };
 
   return (
@@ -73,19 +122,32 @@ const CategoriesPage = () => {
           {!canWrite ? (
             <AccessNotice message="Your role can view categories, but only managers and super admins can change them." />
           ) : null}
+          {feedback.message ? <div className={`feedback-banner feedback-banner--${feedback.type}`}>{feedback.message}</div> : null}
           <div className="form-grid form-grid--single">
-            <input
-              disabled={!canWrite}
-              placeholder="Category name"
-              value={form.name}
-              onChange={(event) => setForm((previous) => ({ ...previous, name: event.target.value }))}
-            />
-            <textarea
-              disabled={!canWrite}
-              placeholder="Category description"
-              value={form.description}
-              onChange={(event) => setForm((previous) => ({ ...previous, description: event.target.value }))}
-            />
+            <label className="field-group">
+              <span>Category name{requiredIndicator}</span>
+              <input
+                data-field="name"
+                className={fieldErrors.name ? "field-input-invalid" : ""}
+                disabled={!canWrite}
+                placeholder="Category name"
+                value={form.name}
+                onChange={(event) => {
+                  setForm((previous) => ({ ...previous, name: event.target.value }));
+                  setFieldErrors((previous) => ({ ...previous, name: "" }));
+                }}
+              />
+              {fieldErrors.name ? <div className="field-error">{fieldErrors.name}</div> : null}
+            </label>
+            <label className="field-group">
+              <span>Category description</span>
+              <textarea
+                disabled={!canWrite}
+                placeholder="Category description"
+                value={form.description}
+                onChange={(event) => setForm((previous) => ({ ...previous, description: event.target.value }))}
+              />
+            </label>
           </div>
           <div className="checkbox-row">
             <label>

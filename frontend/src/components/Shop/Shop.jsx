@@ -3,7 +3,7 @@ import shopStyles from './Shop.module.css';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import Card from 'react-bootstrap/Card';
 import Image from 'react-bootstrap/Image';
 import Form from 'react-bootstrap/Form';
@@ -16,6 +16,7 @@ const PRODUCTS_PER_PAGE = 6;
 
 const Shop = () => {
     const location = useLocation();
+    const [searchParams] = useSearchParams();
     const pathSegments = location.pathname.split('/').filter(Boolean);
     const { setProductID } = useContext(ProductContext);
     const { setProductMore } = useContext(ProductMoreContext);
@@ -24,6 +25,7 @@ const Shop = () => {
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [sortBy, setSortBy] = useState('featured');
     const [page, setPage] = useState(1);
+    const searchTerm = searchParams.get('search') || '';
 
     let currentPath = '';
     const crumbs = pathSegments.map((segment, index) => {
@@ -69,6 +71,7 @@ const Shop = () => {
 
                 const results = await fetchProducts({
                     category: selectedCategory,
+                    q: searchTerm,
                     ...sortMap[sortBy]
                 });
                 setProducts(results);
@@ -79,7 +82,7 @@ const Shop = () => {
         };
 
         loadProducts();
-    }, [selectedCategory, sortBy]);
+    }, [selectedCategory, sortBy, searchTerm]);
 
     const filteredProducts = useMemo(() => products, [products]);
 
@@ -137,7 +140,7 @@ const Shop = () => {
                             <div>
                                 <h2 className='fw-semibold mb-2'>{selectedCategory === 'All' ? 'All Products' : selectedCategory}</h2>
                                 <span style={{ fontSize: '14px', color: 'rgba(0,0,0,0.6)' }}>
-                                    Showing {paginatedProducts.length} of {filteredProducts.length} House of bore products
+                                    Showing {paginatedProducts.length} of {filteredProducts.length} House of bore products{searchTerm ? ` for "${searchTerm}"` : ''}
                                 </span>
                             </div>
                             <div className='d-flex align-items-center mt-lg-0 mt-3'>
@@ -158,7 +161,7 @@ const Shop = () => {
                             </div>
                         </div>
                         <Row className='border-bottom border-tertiary pb-4'>
-                            {paginatedProducts.map((item) => (
+                            {paginatedProducts.length ? paginatedProducts.map((item) => (
                                 <Col lg={4} md={6} xs={6} key={item.id} className={shopStyles.prodresults}>
                                     <Link
                                         to='/shop/product'
@@ -192,7 +195,13 @@ const Shop = () => {
                                         </Card>
                                     </Link>
                                 </Col>
-                            ))}
+                            )) : (
+                                <Col lg={12}>
+                                    <div style={{ padding: '28px 0', color: 'rgba(0,0,0,0.6)' }}>
+                                        No products found{searchTerm ? ` for "${searchTerm}"` : ''}.
+                                    </div>
+                                </Col>
+                            )}
                         </Row>
                         <div className='d-flex justify-content-between align-items-center py-4'>
                             <button

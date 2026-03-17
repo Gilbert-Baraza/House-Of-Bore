@@ -9,21 +9,80 @@ import NavDropdown from 'react-bootstrap/NavDropdown';
 import Form from 'react-bootstrap/Form';
 import Offcanvas from 'react-bootstrap/Offcanvas';
 import Accordion from 'react-bootstrap/Accordion';
-import { Link } from 'react-router-dom';
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import Tooltip from 'react-bootstrap/Tooltip';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { CartContext } from '../../context/CartContext';
 import { AuthContext } from '../../context/AuthContext';
+import { ProductContext } from '../../context/ProductContext';
+import { ProductMoreContext } from '../../context/ProductMoreContext';
 import BrandLogo from '../common/BrandLogo';
 import { siteContent } from '../../data/siteContent';
 import { fetchCategories } from '../../api/categories';
+import { fetchProducts } from '../../api/products';
+
+const CartIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M3.75 4.5H5.3175C6.1725 4.5 6.6 4.5 6.93 4.65975C7.22025 4.80075 7.46775 5.01675 7.64625 5.286C7.8495 5.5935 7.9365 6.012 8.10975 6.849L8.25 7.5H18.8595C19.8735 7.5 20.3805 7.5 20.6715 7.80975C20.9625 8.1195 20.886 8.5965 20.7315 9.5505L20.2635 12.4425C20.058 13.7145 19.956 14.3498 19.52 14.724C19.0837 15.0983 18.4417 15.0983 17.1578 15.0983H9.6405C8.391 15.0983 7.76625 15.0983 7.33875 14.7413C6.91125 14.3843 6.76125 13.7783 6.4605 12.5663L5.47575 8.59575" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M9.75 19.5C9.75 20.1213 9.24632 20.625 8.625 20.625C8.00368 20.625 7.5 20.1213 7.5 19.5C7.5 18.8787 8.00368 18.375 8.625 18.375C9.24632 18.375 9.75 18.8787 9.75 19.5ZM18 19.5C18 20.1213 17.4963 20.625 16.875 20.625C16.2537 20.625 15.75 20.1213 15.75 19.5C15.75 18.8787 16.2537 18.375 16.875 18.375C17.4963 18.375 18 18.8787 18 19.5Z" fill="currentColor" />
+  </svg>
+);
+
+const AccountIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M12 12C14.0711 12 15.75 10.3211 15.75 8.25C15.75 6.17893 14.0711 4.5 12 4.5C9.92893 4.5 8.25 6.17893 8.25 8.25C8.25 10.3211 9.92893 12 12 12Z" stroke="currentColor" strokeWidth="1.8" />
+    <path d="M5.25 19.125C5.25 16.6397 8.27208 14.625 12 14.625C15.7279 14.625 18.75 16.6397 18.75 19.125" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+);
+
+const DeliveryIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M2.25 7.5C2.25 6.87868 2.75368 6.375 3.375 6.375H13.5V15.75H3.375C2.75368 15.75 2.25 15.2463 2.25 14.625V7.5Z" stroke="currentColor" strokeWidth="1.8" />
+    <path d="M13.5 9H17.268C17.6948 9 18.1005 9.1815 18.3855 9.4995L20.7405 12.126C20.9235 12.3307 21.0248 12.5955 21.0248 12.8708V14.625C21.0248 15.2463 20.521 15.75 19.8998 15.75H18.75" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M7.125 18.375C7.74632 18.375 8.25 17.8713 8.25 17.25C8.25 16.6287 7.74632 16.125 7.125 16.125C6.50368 16.125 6 16.6287 6 17.25C6 17.8713 6.50368 18.375 7.125 18.375Z" fill="currentColor" />
+    <path d="M17.625 18.375C18.2463 18.375 18.75 17.8713 18.75 17.25C18.75 16.6287 18.2463 16.125 17.625 16.125C17.0037 16.125 16.5 16.6287 16.5 17.25C16.5 17.8713 17.0037 18.375 17.625 18.375Z" fill="currentColor" />
+  </svg>
+);
+
+const HeaderAction = ({ label, to, children, className = '', showBadge = null }) => (
+  <OverlayTrigger
+    placement="bottom"
+    overlay={<Tooltip id={`tooltip-${label.toLowerCase().replace(/\s+/g, '-')}`}>{label}</Tooltip>}
+  >
+    <Link
+      to={to}
+      aria-label={label}
+      className={`${topnavStyles.iconOnlyLink} text-decoration-none text-dark position-relative ${className}`.trim()}
+    >
+      {children}
+      {showBadge}
+    </Link>
+  </OverlayTrigger>
+);
 
 const TopNav = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [topText, setTopText] = useState(true);
   const [show, setShow] = useState(false);
   const [storeCategories, setStoreCategories] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [liveResults, setLiveResults] = useState([]);
+  const [searchOpen, setSearchOpen] = useState(false);
   const { cart } = useContext(CartContext);
-  const { customer, isAuthenticated, signOut } = useContext(AuthContext);
+  const { isAuthenticated, signOut } = useContext(AuthContext);
+  const { setProductID } = useContext(ProductContext);
+  const { setProductMore } = useContext(ProductMoreContext);
   const { promoBar, navigation } = siteContent;
   const totalQty = cart.reduce((acc, product) => acc + product.quantity, 0);
+
+  useEffect(() => {
+    const queryValue = new URLSearchParams(location.search).get("search") || "";
+
+    if (location.pathname === "/shop") {
+      setSearchTerm(queryValue);
+    }
+  }, [location.pathname, location.search]);
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -37,6 +96,30 @@ const TopNav = () => {
 
     loadCategories();
   }, []);
+
+  useEffect(() => {
+    const trimmedTerm = searchTerm.trim();
+
+    if (!trimmedTerm) {
+      setLiveResults([]);
+      setSearchOpen(false);
+      return undefined;
+    }
+
+    const timer = window.setTimeout(async () => {
+      try {
+        const results = await fetchProducts({ q: trimmedTerm, sort: "createdAt", order: "desc" });
+        setLiveResults(results.slice(0, 5));
+        setSearchOpen(true);
+      } catch (error) {
+        console.error(error);
+        setLiveResults([]);
+        setSearchOpen(true);
+      }
+    }, 220);
+
+    return () => window.clearTimeout(timer);
+  }, [searchTerm]);
 
   const shopGroups = useMemo(() => {
     if (!storeCategories.length) {
@@ -56,6 +139,28 @@ const TopNav = () => {
 
     return storeCategories.slice(0, 3).map((category) => category.name);
   }, [navigation.links, storeCategories]);
+
+  const handleSearchSubmit = (event) => {
+    event.preventDefault();
+
+    const trimmedTerm = searchTerm.trim();
+
+    navigate(trimmedTerm ? `/shop?search=${encodeURIComponent(trimmedTerm)}` : "/shop");
+    setSearchOpen(false);
+  };
+
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
+  };
+
+  const handleResultSelect = (product) => {
+    setSearchOpen(false);
+    setProductID(product.id);
+    setProductMore([]);
+    localStorage.setItem("productID", product.id);
+    localStorage.setItem("productMore", JSON.stringify([]));
+    navigate("/shop/product");
+  };
 
   return (
     <div className='fixed-top'>
@@ -88,11 +193,20 @@ const TopNav = () => {
                 <BrandLogo />
               </Navbar.Brand>
             </div>
-            <div className='d-lg-none d-block'>
-              <Link to='/cart' className='text-decoration-none text-dark position-relative'>
-                Cart
-                {totalQty > 0 ? <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-dark">{totalQty}</span> : ''}
-              </Link>
+            <div className={topnavStyles.mobileActions}>
+              <HeaderAction
+                to='/cart'
+                label='Cart'
+                showBadge={totalQty > 0 ? <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-dark">{totalQty}</span> : null}
+              >
+                <CartIcon />
+              </HeaderAction>
+              <HeaderAction to={isAuthenticated ? '/account' : '/signin'} label={isAuthenticated ? 'Account' : 'Sign In'}>
+                <AccountIcon />
+              </HeaderAction>
+              <HeaderAction to='/track-order' label='Track Order'>
+                <DeliveryIcon />
+              </HeaderAction>
             </div>
           </div>
           <Offcanvas show={show} onHide={() => setShow(false)} className='w-75'>
@@ -123,7 +237,8 @@ const TopNav = () => {
                   </li>
                 ))}
                 <li className='py-2'>
-                  <Link to={isAuthenticated ? '/account' : '/signin'} className='text-decoration-none text-dark'>
+                  <Link to={isAuthenticated ? '/account' : '/signin'} className={`${topnavStyles.iconLink} text-decoration-none text-dark`}>
+                    <AccountIcon />
                     {isAuthenticated ? 'My Account' : 'Sign In'}
                   </Link>
                 </li>
@@ -167,31 +282,68 @@ const TopNav = () => {
                 </Link>
               ))}
             </Nav>
-            <Form className="d-flex align-items-center">
+            <Form className={`d-flex align-items-center ${topnavStyles.navSearchWrap}`} onSubmit={handleSearchSubmit}>
               <Form.Control
                 type="search"
                 placeholder="Search products"
-                className={`${topnavStyles.navsearch} me-lg-5`}
+                className={topnavStyles.navsearch}
                 aria-label="Search"
+                value={searchTerm}
+                onChange={handleSearchChange}
+                onFocus={() => {
+                  if (searchTerm.trim()) {
+                    setSearchOpen(true);
+                  }
+                }}
+                onBlur={() => {
+                  window.setTimeout(() => setSearchOpen(false), 120);
+                }}
               />
-              <span className='me-lg-3'>
-                <Link to='/cart' className='text-decoration-none text-dark position-relative'>
-                  Cart
-                  {totalQty > 0 ? <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-dark">{totalQty}</span> : ''}
-                </Link>
-              </span>
-              <span className='me-lg-3 text-dark'>
-                <Link to={isAuthenticated ? '/account' : '/signin'} className='text-decoration-none text-dark'>
-                  {isAuthenticated ? customer?.name?.split(' ')[0] || 'Account' : 'Sign In'}
-                </Link>
-              </span>
-              <span className='me-lg-3 text-dark'>
-                <Link to='/track-order' className='text-decoration-none text-dark'>
-                  Track Order
-                </Link>
-              </span>
+              {searchOpen ? (
+                <div className={topnavStyles.searchDropdown}>
+                  {liveResults.length ? (
+                    <>
+                      {liveResults.map((product) => (
+                        <button
+                          key={product.id}
+                          type="button"
+                          className={topnavStyles.searchResult}
+                          onMouseDown={() => handleResultSelect(product)}
+                        >
+                          <img src={product.image} alt={product.title} className={topnavStyles.searchThumb} />
+                          <span className={topnavStyles.searchMeta}>
+                            <strong>{product.title}</strong>
+                            <span>{product.category}</span>
+                          </span>
+                          <span className={topnavStyles.searchPrice}>${product.discountedPrice}</span>
+                        </button>
+                      ))}
+                      <button type="submit" className={topnavStyles.searchViewAll}>
+                        View all results for "{searchTerm.trim()}"
+                      </button>
+                    </>
+                  ) : (
+                    <div className={topnavStyles.searchEmpty}>No products match "{searchTerm.trim()}".</div>
+                  )}
+                </div>
+              ) : null}
             </Form>
           </Navbar.Collapse>
+          <div className={`${topnavStyles.desktopActions} d-none d-lg-inline-flex`}>
+            <HeaderAction
+              to='/cart'
+              label='Cart'
+              showBadge={totalQty > 0 ? <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-dark">{totalQty}</span> : null}
+            >
+              <CartIcon />
+            </HeaderAction>
+            <HeaderAction to={isAuthenticated ? '/account' : '/signin'} label={isAuthenticated ? 'Account' : 'Sign In'}>
+              <AccountIcon />
+            </HeaderAction>
+            <HeaderAction to='/track-order' label='Track Order'>
+              <DeliveryIcon />
+            </HeaderAction>
+          </div>
         </Container>
       </Navbar>
     </div>

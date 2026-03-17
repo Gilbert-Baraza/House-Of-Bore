@@ -30,6 +30,22 @@ const emptyColor = {
   value: "#111111"
 };
 
+const requiredIndicator = <span className="field-label-required">*</span>;
+const focusField = (fieldName) => {
+  if (!fieldName || typeof document === "undefined") {
+    return;
+  }
+
+  const element = document.querySelector(`[data-field="${fieldName}"]`);
+
+  if (!element) {
+    return;
+  }
+
+  element.scrollIntoView({ behavior: "smooth", block: "center" });
+  element.focus?.();
+};
+
 const ProductsPage = () => {
   const canWrite = hasPermission("products:write");
   const canUpload = hasPermission("media:upload");
@@ -40,6 +56,8 @@ const ProductsPage = () => {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [colorDraft, setColorDraft] = useState(emptyColor);
+  const [feedback, setFeedback] = useState({ type: "", message: "" });
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const loadProducts = async () => {
     const payload = await apiClient.get("/admin/products");
@@ -76,6 +94,7 @@ const ProductsPage = () => {
     setForm(initialForm);
     setEditingId("");
     setColorDraft(emptyColor);
+    setFieldErrors({});
   };
 
   const uploadAsset = async (file) => {
@@ -87,6 +106,41 @@ const ProductsPage = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setFeedback({ type: "", message: "" });
+    const nextErrors = {};
+
+    if (!form.title.trim()) {
+      nextErrors.title = "Product title is required.";
+    }
+
+    if (!form.category.trim()) {
+      nextErrors.category = "Category is required.";
+    }
+
+    if (!form.description.trim()) {
+      nextErrors.description = "Description is required.";
+    }
+
+    if (!form.image.trim()) {
+      nextErrors.image = "Primary image is required.";
+    }
+
+    if (Number(form.discountedPrice) <= 0) {
+      nextErrors.discountedPrice = "Current price must be greater than zero.";
+    }
+
+    if (Number(form.stock) < 0) {
+      nextErrors.stock = "Stock cannot be negative.";
+    }
+
+    if (Object.keys(nextErrors).length) {
+      setFieldErrors(nextErrors);
+      setFeedback({ type: "error", message: "Please fill in all required fields correctly." });
+      focusField(Object.keys(nextErrors)[0]);
+      return;
+    }
+
+    setFieldErrors({});
 
     const payload = {
       ...form,
@@ -99,14 +153,22 @@ const ProductsPage = () => {
       galleryImages: form.galleryImages
     };
 
-    if (editingId) {
-      await apiClient.put(`/admin/products/${editingId}`, payload);
-    } else {
-      await apiClient.post("/admin/products", payload);
-    }
+    try {
+      if (editingId) {
+        await apiClient.put(`/admin/products/${editingId}`, payload);
+      } else {
+        await apiClient.post("/admin/products", payload);
+      }
 
-    resetForm();
-    await loadProducts();
+      setFeedback({
+        type: "success",
+        message: editingId ? "Product updated successfully." : "Product created successfully."
+      });
+      resetForm();
+      await loadProducts();
+    } catch (error) {
+      setFeedback({ type: "error", message: error.message || "Unable to save product." });
+    }
   };
 
   const handleEdit = (product) => {
@@ -121,8 +183,15 @@ const ProductsPage = () => {
   };
 
   const handleDelete = async (id) => {
-    await apiClient.delete(`/admin/products/${id}`);
-    await loadProducts();
+    setFeedback({ type: "", message: "" });
+
+    try {
+      await apiClient.delete(`/admin/products/${id}`);
+      setFeedback({ type: "success", message: "Product deleted successfully." });
+      await loadProducts();
+    } catch (error) {
+      setFeedback({ type: "error", message: error.message || "Unable to delete product." });
+    }
   };
 
   const handlePrimaryUpload = async (event) => {
@@ -217,6 +286,7 @@ const ProductsPage = () => {
           {!canWrite ? (
             <AccessNotice message="Your role can review catalog data, but only managers and super admins can change products." />
           ) : null}
+          {feedback.message ? <div className={`feedback-banner feedback-banner--${feedback.type}`}>{feedback.message}</div> : null}
           <div className="form-section">
             <div className="form-section__header">
               <h4>Basic Info</h4>
@@ -224,13 +294,33 @@ const ProductsPage = () => {
             </div>
             <div className="form-grid">
               <label className="field-group">
-                <span>Product title</span>
-                <input disabled={!canWrite} placeholder="Enter product title" value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} />
+                <span>Product title{requiredIndicator}</span>
+                <input
+                  data-field="title"
+                  className={fieldErrors.title ? "field-input-invalid" : ""}
+                  disabled={!canWrite}
+                  placeholder="Enter product title"
+                  value={form.title}
+                  onChange={(e) => {
+                    setForm((p) => ({ ...p, title: e.target.value }));
+                    setFieldErrors((previous) => ({ ...previous, title: "" }));
+                  }}
+                />
+                {fieldErrors.title ? <div className="field-error">{fieldErrors.title}</div> : null}
               </label>
               <label className="field-group">
-                <span>Category</span>
+                <span>Category{requiredIndicator}</span>
                 {categoryOptions.length ? (
-                  <select disabled={!canWrite} value={form.category} onChange={(e) => setForm((p) => ({ ...p, category: e.target.value }))}>
+                  <select
+                    data-field="category"
+                    className={fieldErrors.category ? "field-input-invalid" : ""}
+                    disabled={!canWrite}
+                    value={form.category}
+                    onChange={(e) => {
+                      setForm((p) => ({ ...p, category: e.target.value }));
+                      setFieldErrors((previous) => ({ ...previous, category: "" }));
+                    }}
+                  >
                     {categoryOptions.map((category) => (
                       <option key={category} value={category}>
                         {category}
@@ -239,16 +329,33 @@ const ProductsPage = () => {
                   </select>
                 ) : (
                   <input
+                    data-field="category"
+                    className={fieldErrors.category ? "field-input-invalid" : ""}
                     disabled={!canWrite}
                     placeholder="Create a category first, or type one here"
                     value={form.category}
-                    onChange={(e) => setForm((p) => ({ ...p, category: e.target.value }))}
+                    onChange={(e) => {
+                      setForm((p) => ({ ...p, category: e.target.value }));
+                      setFieldErrors((previous) => ({ ...previous, category: "" }));
+                    }}
                   />
                 )}
+                {fieldErrors.category ? <div className="field-error">{fieldErrors.category}</div> : null}
               </label>
               <label className="field-group field-group--full">
-                <span>Description</span>
-                <textarea disabled={!canWrite} placeholder="Write the product description" value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} />
+                <span>Description{requiredIndicator}</span>
+                <textarea
+                  data-field="description"
+                  className={fieldErrors.description ? "field-input-invalid" : ""}
+                  disabled={!canWrite}
+                  placeholder="Write the product description"
+                  value={form.description}
+                  onChange={(e) => {
+                    setForm((p) => ({ ...p, description: e.target.value }));
+                    setFieldErrors((previous) => ({ ...previous, description: "" }));
+                  }}
+                />
+                {fieldErrors.description ? <div className="field-error">{fieldErrors.description}</div> : null}
               </label>
             </div>
           </div>
@@ -264,16 +371,40 @@ const ProductsPage = () => {
                 <input disabled={!canWrite} placeholder="4.5" type="number" step="0.1" value={form.rating} onChange={(e) => setForm((p) => ({ ...p, rating: e.target.value }))} />
               </label>
               <label className="field-group">
-                <span>Current price</span>
-                <input disabled={!canWrite} placeholder="0" type="number" value={form.discountedPrice} onChange={(e) => setForm((p) => ({ ...p, discountedPrice: e.target.value }))} />
+                <span>Current price{requiredIndicator}</span>
+                <input
+                  data-field="discountedPrice"
+                  className={fieldErrors.discountedPrice ? "field-input-invalid" : ""}
+                  disabled={!canWrite}
+                  placeholder="0"
+                  type="number"
+                  value={form.discountedPrice}
+                  onChange={(e) => {
+                    setForm((p) => ({ ...p, discountedPrice: e.target.value }));
+                    setFieldErrors((previous) => ({ ...previous, discountedPrice: "" }));
+                  }}
+                />
+                {fieldErrors.discountedPrice ? <div className="field-error">{fieldErrors.discountedPrice}</div> : null}
               </label>
               <label className="field-group">
                 <span>Old price</span>
                 <input disabled={!canWrite} placeholder="0" type="number" value={form.oldPrice} onChange={(e) => setForm((p) => ({ ...p, oldPrice: e.target.value }))} />
               </label>
               <label className="field-group">
-                <span>Available stock</span>
-                <input disabled={!canWrite} placeholder="0" type="number" value={form.stock} onChange={(e) => setForm((p) => ({ ...p, stock: e.target.value }))} />
+                <span>Available stock{requiredIndicator}</span>
+                <input
+                  data-field="stock"
+                  className={fieldErrors.stock ? "field-input-invalid" : ""}
+                  disabled={!canWrite}
+                  placeholder="0"
+                  type="number"
+                  value={form.stock}
+                  onChange={(e) => {
+                    setForm((p) => ({ ...p, stock: e.target.value }));
+                    setFieldErrors((previous) => ({ ...previous, stock: "" }));
+                  }}
+                />
+                {fieldErrors.stock ? <div className="field-error">{fieldErrors.stock}</div> : null}
               </label>
             </div>
           </div>
@@ -366,8 +497,19 @@ const ProductsPage = () => {
             </div>
             <div className="form-grid">
               <label className="field-group">
-                <span>Primary image URL</span>
-                <input disabled={!canWrite} placeholder="Paste image URL" value={form.image} onChange={(e) => setForm((p) => ({ ...p, image: e.target.value }))} />
+                <span>Primary image URL{requiredIndicator}</span>
+                <input
+                  data-field="image"
+                  className={fieldErrors.image ? "field-input-invalid" : ""}
+                  disabled={!canWrite}
+                  placeholder="Paste image URL"
+                  value={form.image}
+                  onChange={(e) => {
+                    setForm((p) => ({ ...p, image: e.target.value }));
+                    setFieldErrors((previous) => ({ ...previous, image: "" }));
+                  }}
+                />
+                {fieldErrors.image ? <div className="field-error">{fieldErrors.image}</div> : null}
               </label>
               <label className="upload-field">
                 <span>Primary image upload</span>

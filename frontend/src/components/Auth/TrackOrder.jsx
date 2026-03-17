@@ -5,6 +5,14 @@ import { AuthContext } from "../../context/AuthContext";
 import { trackOrder } from "../../api/customerAuth";
 import authStyles from "./AuthPage.module.css";
 
+const trackingStages = [
+  "unpaid",
+  "to_be_shipped",
+  "shipped",
+  "out_for_delivery",
+  "completed"
+];
+
 const formatTimelineDate = (value) => {
   if (!value) {
     return "Just now";
@@ -46,6 +54,45 @@ const getStatusBadgeClassName = (value) => {
     default:
       return authStyles.orderBadge;
   }
+};
+
+const getStatusIcon = (value) => {
+  switch (value) {
+    case "unpaid":
+    case "pending":
+      return "!";
+    case "to_be_shipped":
+      return "\u25A1";
+    case "shipped":
+      return "\u2192";
+    case "out_for_delivery":
+      return "\u21E2";
+    case "completed":
+    case "paid":
+      return "\u2713";
+    case "cancelled":
+    case "failed":
+      return "\u00D7";
+    case "returned":
+    case "refunded":
+      return "\u21A9";
+    default:
+      return "\u2022";
+  }
+};
+
+const getTrackingStageIndex = (status) => {
+  const currentIndex = trackingStages.indexOf(status);
+
+  if (currentIndex >= 0) {
+    return currentIndex;
+  }
+
+  if (status === "cancelled" || status === "returned") {
+    return 0;
+  }
+
+  return -1;
 };
 
 const formatDeliveryDate = (value) => {
@@ -123,6 +170,9 @@ const TrackOrder = () => {
     await lookupOrder(form);
   };
 
+  const activeTrackingStageIndex = getTrackingStageIndex(result?.status);
+  const hasExceptionState = result?.status === "cancelled" || result?.status === "returned";
+
   return (
     <section className={authStyles.authWrapper}>
       <div className={`${authStyles.authCard} ${authStyles.trackCard}`}>
@@ -157,8 +207,49 @@ const TrackOrder = () => {
                 <div className={authStyles.helperText}>{result.customerName}</div>
               </div>
               <div className={authStyles.statusPills}>
-                <span className={getStatusBadgeClassName(result.status)}>{formatStatusLabel(result.status)}</span>
-                <span className={getStatusBadgeClassName(result.paymentStatus)}>{formatStatusLabel(result.paymentStatus)}</span>
+                <span className={getStatusBadgeClassName(result.status)}>
+                  <span className={authStyles.orderBadgeIcon} aria-hidden="true">{getStatusIcon(result.status)}</span>
+                  {formatStatusLabel(result.status)}
+                </span>
+                <span className={getStatusBadgeClassName(result.paymentStatus)}>
+                  <span className={authStyles.orderBadgeIcon} aria-hidden="true">{getStatusIcon(result.paymentStatus)}</span>
+                  {formatStatusLabel(result.paymentStatus)}
+                </span>
+              </div>
+            </div>
+
+            <div className={authStyles.timelineBlock}>
+              <h3>Delivery progress</h3>
+              {hasExceptionState ? (
+                <div className={authStyles.stepperException}>
+                  <span className={getStatusBadgeClassName(result.status)}>
+                    <span className={authStyles.orderBadgeIcon} aria-hidden="true">{getStatusIcon(result.status)}</span>
+                    {formatStatusLabel(result.status)}
+                  </span>
+                  <p>This order is no longer moving through the standard delivery stages.</p>
+                </div>
+              ) : null}
+              <div className={authStyles.trackingStepper} aria-label="Order tracking progress">
+                {trackingStages.map((stage, index) => {
+                  const isComplete = activeTrackingStageIndex > index;
+                  const isCurrent = activeTrackingStageIndex === index;
+
+                  return (
+                    <div
+                      key={stage}
+                      className={[
+                        authStyles.stepperItem,
+                        isComplete ? authStyles.stepperItemComplete : "",
+                        isCurrent ? authStyles.stepperItemCurrent : ""
+                      ].filter(Boolean).join(" ")}
+                    >
+                      <div className={authStyles.stepperMarker}>
+                        {isComplete ? "\u2713" : index + 1}
+                      </div>
+                      <div className={authStyles.stepperLabel}>{formatStatusLabel(stage)}</div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -215,7 +306,10 @@ const TrackOrder = () => {
                   <div key={`${item.status}-${index}`} className={authStyles.timelineItem}>
                     <div>
                       <strong>
-                        <span className={getStatusBadgeClassName(item.status)}>{formatStatusLabel(item.status)}</span>
+                        <span className={getStatusBadgeClassName(item.status)}>
+                          <span className={authStyles.orderBadgeIcon} aria-hidden="true">{getStatusIcon(item.status)}</span>
+                          {formatStatusLabel(item.status)}
+                        </span>
                       </strong>
                       <span>{item.note || "Status updated"}</span>
                     </div>

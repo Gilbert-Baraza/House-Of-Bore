@@ -9,6 +9,22 @@ import { hasPermission } from "../utils/permissions";
 const orderStatuses = ["unpaid", "to_be_shipped", "shipped", "out_for_delivery", "completed", "cancelled", "returned"];
 const paymentStatuses = ["pending", "paid", "failed", "refunded"];
 const deliveryMethods = ["standard", "express", "pickup"];
+const requiredIndicator = <span className="field-label-required">*</span>;
+const focusField = (fieldName) => {
+  if (!fieldName || typeof document === "undefined") {
+    return;
+  }
+
+  const element = document.querySelector(`[data-field="${fieldName}"]`);
+
+  if (!element) {
+    return;
+  }
+
+  element.scrollIntoView({ behavior: "smooth", block: "center" });
+  element.focus?.();
+};
+
 const formatStatusLabel = (value) => {
   if (!value) {
     return "--";
@@ -60,12 +76,39 @@ const getStatusBadgeClassName = (value) => {
   }
 };
 
+const getStatusIcon = (value) => {
+  switch (value) {
+    case "unpaid":
+    case "pending":
+      return "!";
+    case "to_be_shipped":
+      return "□";
+    case "shipped":
+      return "→";
+    case "out_for_delivery":
+      return "⇢";
+    case "completed":
+    case "paid":
+      return "✓";
+    case "cancelled":
+    case "failed":
+      return "×";
+    case "returned":
+    case "refunded":
+      return "↩";
+    default:
+      return "•";
+  }
+};
+
 const OrdersPage = () => {
   const canWrite = hasPermission("orders:write");
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [feedback, setFeedback] = useState({ type: "", message: "" });
+  const [fieldErrors, setFieldErrors] = useState({});
   const [draft, setDraft] = useState({
     status: "unpaid",
     paymentStatus: "pending",
@@ -93,12 +136,19 @@ const OrdersPage = () => {
   }, []);
 
   const handleStatusChange = async (order, nextValues) => {
-    await apiClient.patch(`/admin/orders/${order._id}/status`, {
-      status: nextValues.status ?? order.status,
-      paymentStatus: nextValues.paymentStatus ?? order.paymentStatus
-    });
+    setFeedback({ type: "", message: "" });
 
-    await loadOrders();
+    try {
+      await apiClient.patch(`/admin/orders/${order._id}/status`, {
+        status: nextValues.status ?? order.status,
+        paymentStatus: nextValues.paymentStatus ?? order.paymentStatus
+      });
+
+      setFeedback({ type: "success", message: "Order status updated successfully." });
+      await loadOrders();
+    } catch (error) {
+      setFeedback({ type: "error", message: error.message || "Unable to update order status." });
+    }
   };
 
   useEffect(() => {
@@ -139,23 +189,67 @@ const OrdersPage = () => {
     if (!selectedOrder?._id) {
       return;
     }
+    setFeedback({ type: "", message: "" });
+    const nextErrors = {};
 
-    await apiClient.patch(`/admin/orders/${selectedOrder._id}`, draft);
-    await loadOrders();
+    if (!draft.deliveryMethod) {
+      nextErrors.deliveryMethod = "Delivery method is required.";
+    }
+
+    if (Object.keys(nextErrors).length) {
+      setFieldErrors(nextErrors);
+      setFeedback({ type: "error", message: "Please fill in all required fields." });
+      focusField(Object.keys(nextErrors)[0]);
+      return;
+    }
+
+    setFieldErrors({});
+
+    try {
+      await apiClient.patch(`/admin/orders/${selectedOrder._id}`, draft);
+      setFeedback({ type: "success", message: "Order details saved successfully." });
+      await loadOrders();
+    } catch (error) {
+      setFeedback({ type: "error", message: error.message || "Unable to save order details." });
+    }
   };
 
   const handleSaveTrackingUpdate = async () => {
     if (!selectedOrder?._id) {
       return;
     }
+    setFeedback({ type: "", message: "" });
+    const nextErrors = {};
 
-    await apiClient.patch(`/admin/orders/${selectedOrder._id}/status`, {
-      status: draft.status,
-      paymentStatus: draft.paymentStatus,
-      customerUpdate: draft.trackingUpdate
-    });
+    if (!draft.status) {
+      nextErrors.status = "Fulfillment status is required.";
+    }
 
-    await loadOrders();
+    if (!draft.paymentStatus) {
+      nextErrors.paymentStatus = "Payment status is required.";
+    }
+
+    if (Object.keys(nextErrors).length) {
+      setFieldErrors(nextErrors);
+      setFeedback({ type: "error", message: "Please fill in all required fields." });
+      focusField(Object.keys(nextErrors)[0]);
+      return;
+    }
+
+    setFieldErrors({});
+
+    try {
+      await apiClient.patch(`/admin/orders/${selectedOrder._id}/status`, {
+        status: draft.status,
+        paymentStatus: draft.paymentStatus,
+        customerUpdate: draft.trackingUpdate
+      });
+
+      setFeedback({ type: "success", message: "Tracking update saved successfully." });
+      await loadOrders();
+    } catch (error) {
+      setFeedback({ type: "error", message: error.message || "Unable to save tracking update." });
+    }
   };
 
   const paidCount = orders.filter((order) => order.paymentStatus === "paid").length;
@@ -186,6 +280,7 @@ const OrdersPage = () => {
           {!canWrite ? (
             <AccessNotice title="Limited access" message="Your role can review orders, but fulfillment changes are restricted." />
           ) : null}
+          {feedback.message ? <div className={`feedback-banner feedback-banner--${feedback.type}`}>{feedback.message}</div> : null}
 
           <div className="form-section">
             <div className="form-section__header">
@@ -240,7 +335,10 @@ const OrdersPage = () => {
                   label: "Fulfillment",
                   render: (row) => (
                     <div className="status-cell">
-                      <span className={getStatusBadgeClassName(row.status)}>{formatStatusLabel(row.status)}</span>
+                      <span className={getStatusBadgeClassName(row.status)}>
+                        <span className="status-badge__icon" aria-hidden="true">{getStatusIcon(row.status)}</span>
+                        {formatStatusLabel(row.status)}
+                      </span>
                       <select
                         disabled={!canWrite}
                         value={row.status}
@@ -260,7 +358,10 @@ const OrdersPage = () => {
                   label: "Payment",
                   render: (row) => (
                     <div className="status-cell">
-                      <span className={getStatusBadgeClassName(row.paymentStatus)}>{formatStatusLabel(row.paymentStatus)}</span>
+                      <span className={getStatusBadgeClassName(row.paymentStatus)}>
+                        <span className="status-badge__icon" aria-hidden="true">{getStatusIcon(row.paymentStatus)}</span>
+                        {formatStatusLabel(row.paymentStatus)}
+                      </span>
                       <select
                         disabled={!canWrite}
                         value={row.paymentStatus}
@@ -311,13 +412,19 @@ const OrdersPage = () => {
                 <div>
                   <span>Status</span>
                   <strong>
-                    <span className={getStatusBadgeClassName(selectedOrder.status)}>{formatStatusLabel(selectedOrder.status)}</span>
+                    <span className={getStatusBadgeClassName(selectedOrder.status)}>
+                      <span className="status-badge__icon" aria-hidden="true">{getStatusIcon(selectedOrder.status)}</span>
+                      {formatStatusLabel(selectedOrder.status)}
+                    </span>
                   </strong>
                 </div>
                 <div>
                   <span>Payment</span>
                   <strong>
-                    <span className={getStatusBadgeClassName(selectedOrder.paymentStatus)}>{formatStatusLabel(selectedOrder.paymentStatus)}</span>
+                    <span className={getStatusBadgeClassName(selectedOrder.paymentStatus)}>
+                      <span className="status-badge__icon" aria-hidden="true">{getStatusIcon(selectedOrder.paymentStatus)}</span>
+                      {formatStatusLabel(selectedOrder.paymentStatus)}
+                    </span>
                   </strong>
                 </div>
                 <div>
@@ -334,11 +441,16 @@ const OrdersPage = () => {
                 <div className="detail-section">
                   <div className="form-grid form-grid--single">
                     <label className="field-group">
-                      <span>Fulfillment status</span>
+                      <span>Fulfillment status{requiredIndicator}</span>
                       <select
+                        data-field="status"
+                        className={fieldErrors.status ? "field-input-invalid" : ""}
                         disabled={!canWrite}
                         value={draft.status}
-                        onChange={(event) => setDraft((previous) => ({ ...previous, status: event.target.value }))}
+                        onChange={(event) => {
+                          setDraft((previous) => ({ ...previous, status: event.target.value }));
+                          setFieldErrors((previous) => ({ ...previous, status: "" }));
+                        }}
                       >
                         {orderStatuses.map((status) => (
                           <option key={status} value={status}>
@@ -346,13 +458,19 @@ const OrdersPage = () => {
                           </option>
                         ))}
                       </select>
+                      {fieldErrors.status ? <div className="field-error">{fieldErrors.status}</div> : null}
                     </label>
                     <label className="field-group">
-                      <span>Payment status</span>
+                      <span>Payment status{requiredIndicator}</span>
                       <select
+                        data-field="paymentStatus"
+                        className={fieldErrors.paymentStatus ? "field-input-invalid" : ""}
                         disabled={!canWrite}
                         value={draft.paymentStatus}
-                        onChange={(event) => setDraft((previous) => ({ ...previous, paymentStatus: event.target.value }))}
+                        onChange={(event) => {
+                          setDraft((previous) => ({ ...previous, paymentStatus: event.target.value }));
+                          setFieldErrors((previous) => ({ ...previous, paymentStatus: "" }));
+                        }}
                       >
                         {paymentStatuses.map((status) => (
                           <option key={status} value={status}>
@@ -360,6 +478,7 @@ const OrdersPage = () => {
                           </option>
                         ))}
                       </select>
+                      {fieldErrors.paymentStatus ? <div className="field-error">{fieldErrors.paymentStatus}</div> : null}
                     </label>
                     <label className="field-group">
                       <span>Customer-facing tracking update</span>
@@ -403,11 +522,16 @@ const OrdersPage = () => {
                 <div className="detail-section">
                   <div className="form-grid form-grid--single">
                     <label className="field-group">
-                      <span>Delivery method</span>
+                      <span>Delivery method{requiredIndicator}</span>
                       <select
+                        data-field="deliveryMethod"
+                        className={fieldErrors.deliveryMethod ? "field-input-invalid" : ""}
                         disabled={!canWrite}
                         value={draft.deliveryMethod}
-                        onChange={(event) => setDraft((previous) => ({ ...previous, deliveryMethod: event.target.value }))}
+                        onChange={(event) => {
+                          setDraft((previous) => ({ ...previous, deliveryMethod: event.target.value }));
+                          setFieldErrors((previous) => ({ ...previous, deliveryMethod: "" }));
+                        }}
                       >
                         {deliveryMethods.map((item) => (
                           <option key={item} value={item}>
@@ -415,6 +539,7 @@ const OrdersPage = () => {
                           </option>
                         ))}
                       </select>
+                      {fieldErrors.deliveryMethod ? <div className="field-error">{fieldErrors.deliveryMethod}</div> : null}
                     </label>
                     <label className="field-group">
                       <span>Tracking number</span>
@@ -535,7 +660,10 @@ const OrdersPage = () => {
                       <div key={`${item.status}-${index}`} className="timeline-item">
                         <div>
                           <strong>
-                            <span className={getStatusBadgeClassName(item.status)}>{formatStatusLabel(item.status)}</span>
+                            <span className={getStatusBadgeClassName(item.status)}>
+                              <span className="status-badge__icon" aria-hidden="true">{getStatusIcon(item.status)}</span>
+                              {formatStatusLabel(item.status)}
+                            </span>
                           </strong>
                           <div className="muted-copy">{item.note || "Status updated"}</div>
                         </div>

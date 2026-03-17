@@ -15,6 +15,20 @@ import Alert from 'react-bootstrap/Alert'
 import { createOrder } from '../../api/orders';
 import { AuthContext } from '../../context/AuthContext';
 
+const focusField = (fieldName) => {
+    if (!fieldName || typeof document === 'undefined') {
+        return;
+    }
+
+    const element = document.querySelector(`[data-field="${fieldName}"]`);
+
+    if (!element) {
+        return;
+    }
+
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    element.focus?.();
+};
 
 const Cart = ({ emptyCart, productDetail, productSpecs }) => {
 
@@ -62,6 +76,7 @@ const Cart = ({ emptyCart, productDetail, productSpecs }) => {
     const [submittingOrder, setSubmittingOrder] = useState(false);
     const [orderSuccess, setOrderSuccess] = useState(null);
     const [orderError, setOrderError] = useState('');
+    const [fieldErrors, setFieldErrors] = useState({});
 
     console.log(cart);
 
@@ -122,12 +137,51 @@ const Cart = ({ emptyCart, productDetail, productSpecs }) => {
             ...prev,
             [name]: type === 'checkbox' ? checked : value
         }));
+        setFieldErrors((previous) => ({ ...previous, [name]: '' }));
     };
 
     const handleCheckoutSubmit = async (event) => {
         event.preventDefault();
         setOrderError('');
         setOrderSuccess(null);
+        const nextErrors = {};
+
+        if (!checkout.customerName.trim()) {
+            nextErrors.customerName = 'Full name is required.';
+        }
+
+        if (!checkout.customerEmail.trim()) {
+            nextErrors.customerEmail = 'Email address is required.';
+        }
+
+        if (!checkout.customerPhone.trim()) {
+            nextErrors.customerPhone = 'Phone number is required.';
+        }
+
+        if (!checkout.line1.trim()) {
+            nextErrors.line1 = 'Street address is required.';
+        }
+
+        if (!checkout.city.trim()) {
+            nextErrors.city = 'City is required.';
+        }
+
+        if (!checkout.region.trim()) {
+            nextErrors.region = 'Region / County is required.';
+        }
+
+        if (!checkout.country.trim()) {
+            nextErrors.country = 'Country is required.';
+        }
+
+        if (Object.keys(nextErrors).length) {
+            setFieldErrors(nextErrors);
+            setOrderError('Please fill in all required checkout fields.');
+            focusField(Object.keys(nextErrors)[0]);
+            return;
+        }
+
+        setFieldErrors({});
         setSubmittingOrder(true);
 
         try {
@@ -298,13 +352,16 @@ const Cart = ({ emptyCart, productDetail, productSpecs }) => {
                                         {orderError ? <Alert variant='danger'>{orderError}</Alert> : null}
                                         <div className={cartStyles.checkoutgrid}>
                                             <Form.Group controlId="checkoutName">
-                                                <Form.Control name="customerName" value={checkout.customerName} onChange={handleCheckoutChange} type="text" placeholder="Full name" className={cartStyles.checkoutinput} required />
+                                                <Form.Control data-field="customerName" name="customerName" value={checkout.customerName} onChange={handleCheckoutChange} type="text" placeholder="Full name" className={`${cartStyles.checkoutinput} ${fieldErrors.customerName ? cartStyles.checkoutinputInvalid : ''}`} />
+                                                {fieldErrors.customerName ? <div className={cartStyles.fieldError}>{fieldErrors.customerName}</div> : null}
                                             </Form.Group>
                                             <Form.Group controlId="checkoutEmail">
-                                                <Form.Control name="customerEmail" value={checkout.customerEmail} onChange={handleCheckoutChange} type="email" placeholder="Email address" className={cartStyles.checkoutinput} required />
+                                                <Form.Control data-field="customerEmail" name="customerEmail" value={checkout.customerEmail} onChange={handleCheckoutChange} type="email" placeholder="Email address" className={`${cartStyles.checkoutinput} ${fieldErrors.customerEmail ? cartStyles.checkoutinputInvalid : ''}`} />
+                                                {fieldErrors.customerEmail ? <div className={cartStyles.fieldError}>{fieldErrors.customerEmail}</div> : null}
                                             </Form.Group>
                                             <Form.Group controlId="checkoutPhone">
-                                                <Form.Control name="customerPhone" value={checkout.customerPhone} onChange={handleCheckoutChange} type="text" placeholder="Phone number" className={cartStyles.checkoutinput} required />
+                                                <Form.Control data-field="customerPhone" name="customerPhone" value={checkout.customerPhone} onChange={handleCheckoutChange} type="text" placeholder="Phone number" className={`${cartStyles.checkoutinput} ${fieldErrors.customerPhone ? cartStyles.checkoutinputInvalid : ''}`} />
+                                                {fieldErrors.customerPhone ? <div className={cartStyles.fieldError}>{fieldErrors.customerPhone}</div> : null}
                                             </Form.Group>
                                             <Form.Group controlId="checkoutDelivery">
                                                 <Form.Select name="deliveryMethod" value={checkout.deliveryMethod} onChange={handleCheckoutChange} className={cartStyles.checkoutinput}>
@@ -317,22 +374,26 @@ const Cart = ({ emptyCart, productDetail, productSpecs }) => {
                                                 <Form.Control name="fullName" value={checkout.fullName} onChange={handleCheckoutChange} type="text" placeholder="Shipping recipient name" className={cartStyles.checkoutinput} />
                                             </Form.Group>
                                             <Form.Group controlId="shippingLine1" className={cartStyles.checkoutfull}>
-                                                <Form.Control name="line1" value={checkout.line1} onChange={handleCheckoutChange} type="text" placeholder="Street address" className={cartStyles.checkoutinput} required />
+                                                <Form.Control data-field="line1" name="line1" value={checkout.line1} onChange={handleCheckoutChange} type="text" placeholder="Street address" className={`${cartStyles.checkoutinput} ${fieldErrors.line1 ? cartStyles.checkoutinputInvalid : ''}`} />
+                                                {fieldErrors.line1 ? <div className={cartStyles.fieldError}>{fieldErrors.line1}</div> : null}
                                             </Form.Group>
                                             <Form.Group controlId="shippingLine2" className={cartStyles.checkoutfull}>
                                                 <Form.Control name="line2" value={checkout.line2} onChange={handleCheckoutChange} type="text" placeholder="Apartment, suite, landmark" className={cartStyles.checkoutinput} />
                                             </Form.Group>
                                             <Form.Group controlId="shippingCity">
-                                                <Form.Control name="city" value={checkout.city} onChange={handleCheckoutChange} type="text" placeholder="City" className={cartStyles.checkoutinput} required />
+                                                <Form.Control data-field="city" name="city" value={checkout.city} onChange={handleCheckoutChange} type="text" placeholder="City" className={`${cartStyles.checkoutinput} ${fieldErrors.city ? cartStyles.checkoutinputInvalid : ''}`} />
+                                                {fieldErrors.city ? <div className={cartStyles.fieldError}>{fieldErrors.city}</div> : null}
                                             </Form.Group>
                                             <Form.Group controlId="shippingRegion">
-                                                <Form.Control name="region" value={checkout.region} onChange={handleCheckoutChange} type="text" placeholder="Region / County" className={cartStyles.checkoutinput} required />
+                                                <Form.Control data-field="region" name="region" value={checkout.region} onChange={handleCheckoutChange} type="text" placeholder="Region / County" className={`${cartStyles.checkoutinput} ${fieldErrors.region ? cartStyles.checkoutinputInvalid : ''}`} />
+                                                {fieldErrors.region ? <div className={cartStyles.fieldError}>{fieldErrors.region}</div> : null}
                                             </Form.Group>
                                             <Form.Group controlId="shippingPostal">
                                                 <Form.Control name="postalCode" value={checkout.postalCode} onChange={handleCheckoutChange} type="text" placeholder="Postal code" className={cartStyles.checkoutinput} />
                                             </Form.Group>
                                             <Form.Group controlId="shippingCountry">
-                                                <Form.Control name="country" value={checkout.country} onChange={handleCheckoutChange} type="text" placeholder="Country" className={cartStyles.checkoutinput} required />
+                                                <Form.Control data-field="country" name="country" value={checkout.country} onChange={handleCheckoutChange} type="text" placeholder="Country" className={`${cartStyles.checkoutinput} ${fieldErrors.country ? cartStyles.checkoutinputInvalid : ''}`} />
+                                                {fieldErrors.country ? <div className={cartStyles.fieldError}>{fieldErrors.country}</div> : null}
                                             </Form.Group>
                                         </div>
                                         <Form.Check

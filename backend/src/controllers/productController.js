@@ -1,6 +1,6 @@
 const Product = require("../models/Product");
 
-const buildProductQuery = ({ category, featured }) => {
+const buildProductQuery = ({ category, featured, q }) => {
   const query = {};
 
   if (category && category !== "All") {
@@ -15,11 +15,20 @@ const buildProductQuery = ({ category, featured }) => {
     query.isTopSelling = true;
   }
 
+  if (q) {
+    const searchRegex = new RegExp(q.trim(), "i");
+    query.$or = [
+      { title: searchRegex },
+      { category: searchRegex },
+      { description: searchRegex }
+    ];
+  }
+
   return query;
 };
 
 const listProducts = async (req, res) => {
-  const { category, featured, sort = "createdAt", order = "desc" } = req.query;
+  const { category, featured, q, sort = "createdAt", order = "desc" } = req.query;
   const sortDirection = order === "asc" ? 1 : -1;
   const sortMap = {
     createdAt: { createdAt: sortDirection },
@@ -28,7 +37,7 @@ const listProducts = async (req, res) => {
     title: { title: sortDirection }
   };
 
-  const products = await Product.find(buildProductQuery({ category, featured })).sort(
+  const products = await Product.find(buildProductQuery({ category, featured, q })).sort(
     sortMap[sort] || sortMap.createdAt
   );
 

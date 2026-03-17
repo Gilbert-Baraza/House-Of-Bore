@@ -25,12 +25,30 @@ const emptyDraft = {
   phone: ""
 };
 
+const requiredIndicator = <span className="field-label-required">*</span>;
+const focusField = (fieldName) => {
+  if (!fieldName || typeof document === "undefined") {
+    return;
+  }
+
+  const element = document.querySelector(`[data-field="${fieldName}"]`);
+
+  if (!element) {
+    return;
+  }
+
+  element.scrollIntoView({ behavior: "smooth", block: "center" });
+  element.focus?.();
+};
+
 const CustomersPage = () => {
   const canWrite = hasPermission("customers:write");
   const [customers, setCustomers] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [customerOrders, setCustomerOrders] = useState([]);
   const [draft, setDraft] = useState(emptyDraft);
+  const [feedback, setFeedback] = useState({ type: "", message: "" });
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const loadCustomers = async () => {
     const payload = await apiClient.get("/admin/customers");
@@ -69,16 +87,36 @@ const CustomersPage = () => {
     if (!selectedCustomer?._id) {
       return;
     }
+    setFeedback({ type: "", message: "" });
+    const nextErrors = {};
 
-    await apiClient.put(`/admin/customers/${selectedCustomer._id}`, {
-      tier: draft.tier,
-      isSubscribed: draft.isSubscribed,
-      notes: draft.notes,
-      phone: draft.phone,
-      tags: draft.tagsText.split(",").map((item) => item.trim()).filter(Boolean)
-    });
+    if (!draft.phone.trim()) {
+      nextErrors.phone = "Phone number is required.";
+    }
 
-    await loadCustomers();
+    if (Object.keys(nextErrors).length) {
+      setFieldErrors(nextErrors);
+      setFeedback({ type: "error", message: "Please fill in all required fields." });
+      focusField(Object.keys(nextErrors)[0]);
+      return;
+    }
+
+    setFieldErrors({});
+
+    try {
+      await apiClient.put(`/admin/customers/${selectedCustomer._id}`, {
+        tier: draft.tier,
+        isSubscribed: draft.isSubscribed,
+        notes: draft.notes,
+        phone: draft.phone,
+        tags: draft.tagsText.split(",").map((item) => item.trim()).filter(Boolean)
+      });
+
+      setFeedback({ type: "success", message: "Customer profile updated successfully." });
+      await loadCustomers();
+    } catch (error) {
+      setFeedback({ type: "error", message: error.message || "Unable to update customer profile." });
+    }
   };
 
   const totalCustomers = customers.length;
@@ -146,6 +184,7 @@ const CustomersPage = () => {
           {!canWrite ? (
             <AccessNotice title="Limited access" message="Your role can review customer history, but profile changes are restricted." />
           ) : null}
+          {feedback.message ? <div className={`feedback-banner feedback-banner--${feedback.type}`}>{feedback.message}</div> : null}
 
           {selectedCustomer ? (
             <div className="detail-stack">
@@ -168,13 +207,19 @@ const CustomersPage = () => {
                 <div className="detail-section">
                   <div className="form-grid form-grid--single">
                     <label className="field-group">
-                      <span>Phone</span>
+                      <span>Phone{requiredIndicator}</span>
                       <input
+                        data-field="phone"
+                        className={fieldErrors.phone ? "field-input-invalid" : ""}
                         disabled={!canWrite}
                         placeholder="Enter customer phone number"
                         value={draft.phone}
-                        onChange={(event) => setDraft((previous) => ({ ...previous, phone: event.target.value }))}
+                        onChange={(event) => {
+                          setDraft((previous) => ({ ...previous, phone: event.target.value }));
+                          setFieldErrors((previous) => ({ ...previous, phone: "" }));
+                        }}
                       />
+                      {fieldErrors.phone ? <div className="field-error">{fieldErrors.phone}</div> : null}
                     </label>
                     <label className="field-group">
                       <span>Loyalty tier</span>
