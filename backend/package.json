@@ -1,5 +1,5 @@
 {
-  "name": "shopco-backend",
+  "name": "house of bore-backend",
   "version": "1.0.0",
   "description": "Backend API for House of bore ecommerce",
   "main": "src/server.js",

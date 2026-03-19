@@ -38,7 +38,7 @@ const DressStyle = () => {
             description: 'Bold staples, event-ready looks, and confident everyday style.'
         },
         {
-            name: 'Jeweleries',
+            name: 'Accessories',
             description: 'Small details that elevate every outfit.'
         }
     ];

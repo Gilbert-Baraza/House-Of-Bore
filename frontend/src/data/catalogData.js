@@ -180,7 +180,7 @@ export const catalogProducts = [
   }
 ];
 
-export const categories = ["All", "Shoes", "Men", "Women", "Jeweleries"];
+export const categories = ["All", "Shoes", "Men", "Women", "Accessories"];
 
 export const getProductById = (productId) =>
   catalogProducts.find((product) => product.id === productId);

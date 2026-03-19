@@ -1,0 +1,54 @@
+Password reset + email verification
+Cloud image storage instead of local uploads
+Production deployment/config for all 3 apps
+Email notifications for orders and tracking
+Security hardening for admin and auth
+Final QA + policy pages
+
+
+Nice But Strongly Recommended
+Wishlist
+Coupon/discount engine finalization
+Tax handling
+Shipping fee logic by location
+Analytics
+Meta Pixel / Google Analytics / search console
+Product reviews moderation
+Inventory alerts for low stock
+
+
+Must-Have
+
+Real deployment setup for frontend, admin, and backend
+Production MongoDB with backups and restore plan
+Proper environment secrets management
+Domain + SSL for storefront and admin
+Admin security hardening:
+strong seeded passwords replaced
+JWT/session expiry review
+rate limiting
+brute-force protection
+audit logging
+File upload production storage:
+move from local backend/uploads to cloud storage like Cloudinary, S3, or similar
+Email system:
+order confirmation
+account signup / verification
+password reset
+shipping / tracking updates
+Error logging and monitoring:
+server logs
+crash monitoring
+uptime alerts
+Legal/store basics:
+privacy policy
+terms
+return/refund policy
+shipping policy
+Checkout/order rules:
+stock validation at order time
+oversell protection
+order cancellation / refund workflow
+Full QA on mobile and desktop
+
+

@@ -1,6 +1,6 @@
 export const siteContent = {
   brand: {
-    name: "House of bore",
+    name: "HOUSE OF BORE",
   },
   promoBar: {
     text: "Fresh picks are in. Shop House of bore and get standout style at everyday prices.",
@@ -22,17 +22,17 @@ export const siteContent = {
         description: "Bold staples, occasion looks, and wardrobe must-haves.",
       },
       {
-        title: "Jeweleries",
+        title: "Accessories",
         description: "Finishing touches that add shine to every outfit.",
       },
     ],
-    links: ["Shoes", "Men", "Women"],
+    links: ["Men", "Women", "Shoes", "Bags","Accessories"],
   },
   hero: {
     eyebrow: "Style for every day",
-    title: "House of bore brings fashion, shoes, and jeweleries together in one bold storefront.",
+    title: "House of bore brings fashion, shoes, and Accessories together in one bold storefront.",
     description:
-      "Discover quality picks across shoes, men's wear, women's wear, and jeweleries with a shopping experience inspired by a bright marketplace feel and a cleaner premium finish.",
+      "Discover quality picks across shoes, men's wear, women's wear, and Accessories with a shopping experience inspired by a bright marketplace feel and a cleaner premium finish.",
     ctaLabel: "Browse catalog",
     ctaHref: "/shop",
     stats: [
@@ -40,7 +40,7 @@ export const siteContent = {
       { value: "Fast", label: "Order processing" },
       { value: "New", label: "Weekly arrivals" },
     ],
-    featuredBrands: ["Shoes", "Men", "Women", "Jeweleries", "New Arrivals"],
+    featuredBrands: ["Men", "Women", "Shoes", "Bags", "Accessories", "New Arrivals"],
   },
   newsletter: {
     title: "Get fresh arrivals, price drops, and exclusive House of bore offers first.",
@@ -53,15 +53,24 @@ export const siteContent = {
     columns: [
       {
         title: "Shop",
-        links: ["Shoes", "Men", "Women", "Jeweleries"],
+        links: ["Men", "Women", "Shoes", "Bags", "Accessories",],
       },
       {
         title: "About",
-        links: ["Our story", "Contact", "Store policy", "Careers"],
+        links: [
+          { label: "Our story", href: "/" },
+          { label: "Contact", href: "/track-order" },
+          { label: "Terms", href: "/terms" },
+          { label: "Privacy policy", href: "/privacy-policy" }
+        ],
       },
       {
         title: "Support",
-        links: ["Shipping", "Returns", "FAQs", "Privacy policy"],
+        links: [
+          { label: "Shipping policy", href: "/shipping-policy" },
+          { label: "Return policy", href: "/return-refund-policy" },
+          { label: "Track order", href: "/track-order" }
+        ],
       },
     ],
     copyright: `House of bore (c) ${new Date().getFullYear()} All rights reserved`,

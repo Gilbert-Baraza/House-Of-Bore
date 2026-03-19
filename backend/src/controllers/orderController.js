@@ -1,16 +1,18 @@
 const Order = require("../models/Order");
 const { normalizeOrderStatus, normalizeTimelineStatus } = require("../utils/orderStatus");
 
-const appendTimelineEntry = (order, note, statusOverride) => {
+const appendTimelineEntry = (order, note, options = {}) => {
   const trimmedNote = typeof note === "string" ? note.trim() : "";
+  const trimmedLocation = typeof options.location === "string" ? options.location.trim() : "";
 
   if (!trimmedNote) {
     return;
   }
 
   order.statusTimeline.push({
-    status: normalizeTimelineStatus(statusOverride || order.status),
-    note: trimmedNote
+    status: normalizeTimelineStatus(options.statusOverride || order.status),
+    note: trimmedNote,
+    location: trimmedLocation
   });
 };
 
@@ -35,7 +37,7 @@ const listOrders = async (req, res) => {
 };
 
 const updateOrderStatus = async (req, res) => {
-  const { status, paymentStatus, statusNote, paymentNote, customerUpdate } = req.body;
+  const { status, paymentStatus, statusNote, paymentNote, customerUpdate, trackingLocation } = req.body;
   const order = await Order.findById(req.params.id);
 
   if (!order) {
@@ -49,12 +51,16 @@ const updateOrderStatus = async (req, res) => {
   }));
 
   const normalizedCustomerUpdate = typeof customerUpdate === "string" ? customerUpdate.trim() : "";
+  const normalizedTrackingLocation = typeof trackingLocation === "string" ? trackingLocation.trim() : "";
   const statusChanged = Boolean(status && status !== order.status);
   const paymentChanged = Boolean(paymentStatus && paymentStatus !== order.paymentStatus);
 
   if (status && status !== order.status) {
     order.status = status;
-    appendTimelineEntry(order, statusNote || normalizedCustomerUpdate || `Order marked as ${status}`, status);
+    appendTimelineEntry(order, statusNote || normalizedCustomerUpdate || `Order marked as ${status}`, {
+      statusOverride: status,
+      location: normalizedTrackingLocation
+    });
   }
 
   if (paymentStatus) {
@@ -64,12 +70,13 @@ const updateOrderStatus = async (req, res) => {
   if (paymentChanged) {
     appendTimelineEntry(
       order,
-      paymentNote || (!statusChanged ? normalizedCustomerUpdate : "") || `Payment status updated to ${paymentStatus}`
+      paymentNote || (!statusChanged ? normalizedCustomerUpdate : "") || `Payment status updated to ${paymentStatus}`,
+      { location: normalizedTrackingLocation }
     );
   }
 
   if (!statusChanged && !paymentChanged && normalizedCustomerUpdate) {
-    appendTimelineEntry(order, normalizedCustomerUpdate);
+    appendTimelineEntry(order, normalizedCustomerUpdate, { location: normalizedTrackingLocation });
   }
 
   await order.save();
@@ -102,12 +109,16 @@ const updateOrderDetails = async (req, res) => {
     customerUpdate
   } = req.body;
   const normalizedCustomerUpdate = typeof customerUpdate === "string" ? customerUpdate.trim() : "";
+  const normalizedTrackingLocation =
+    typeof req.body.trackingLocation === "string" ? req.body.trackingLocation.trim() : "";
   const existingAddress = order.shippingAddress?.toObject?.() || order.shippingAddress || {};
   let timelineUpdated = false;
 
   if (deliveryMethod && deliveryMethod !== order.deliveryMethod) {
     order.deliveryMethod = deliveryMethod;
-    appendTimelineEntry(order, `Delivery method updated to ${deliveryMethod}`);
+    appendTimelineEntry(order, `Delivery method updated to ${deliveryMethod}`, {
+      location: normalizedTrackingLocation
+    });
     timelineUpdated = true;
   }
 
@@ -115,7 +126,8 @@ const updateOrderDetails = async (req, res) => {
     order.courierName = courierName;
     appendTimelineEntry(
       order,
-      courierName ? `Courier updated to ${courierName}` : "Courier assignment cleared while shipment is being reviewed"
+      courierName ? `Courier updated to ${courierName}` : "Courier assignment cleared while shipment is being reviewed",
+      { location: normalizedTrackingLocation }
     );
     timelineUpdated = true;
   }
@@ -126,7 +138,8 @@ const updateOrderDetails = async (req, res) => {
       order,
       trackingNumber
         ? `Tracking number updated to ${trackingNumber}`
-        : "Tracking number cleared while delivery is being reviewed"
+        : "Tracking number cleared while delivery is being reviewed",
+      { location: normalizedTrackingLocation }
     );
     timelineUpdated = true;
   }
@@ -137,7 +150,8 @@ const updateOrderDetails = async (req, res) => {
       order,
       courierTrackingUrl
         ? "Courier tracking link updated for customer access"
-        : "Courier tracking link removed while shipment details are being updated"
+        : "Courier tracking link removed while shipment details are being updated",
+      { location: normalizedTrackingLocation }
     );
     timelineUpdated = true;
   }
@@ -165,7 +179,8 @@ const updateOrderDetails = async (req, res) => {
               month: "short",
               day: "numeric"
             })}`
-          : "Estimated delivery date cleared while the delivery schedule is being updated"
+          : "Estimated delivery date cleared while the delivery schedule is being updated",
+        { location: normalizedTrackingLocation }
       );
       timelineUpdated = true;
     }
@@ -173,7 +188,11 @@ const updateOrderDetails = async (req, res) => {
 
   if (typeof fulfillmentNotes === "string" && fulfillmentNotes !== order.fulfillmentNotes) {
     order.fulfillmentNotes = fulfillmentNotes;
-    appendTimelineEntry(order, normalizedCustomerUpdate || fulfillmentNotes || "Fulfillment instructions updated");
+    appendTimelineEntry(
+      order,
+      normalizedCustomerUpdate || fulfillmentNotes || "Fulfillment instructions updated",
+      { location: normalizedTrackingLocation }
+    );
     timelineUpdated = true;
   }
 
@@ -189,7 +208,7 @@ const updateOrderDetails = async (req, res) => {
   }
 
   if (!timelineUpdated && normalizedCustomerUpdate) {
-    appendTimelineEntry(order, normalizedCustomerUpdate);
+    appendTimelineEntry(order, normalizedCustomerUpdate, { location: normalizedTrackingLocation });
   }
 
   await order.save();

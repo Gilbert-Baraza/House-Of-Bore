@@ -8,6 +8,7 @@ const serializeTrackingOrder = (order) => ({
   customerEmail: order.customerEmail,
   status: normalizeOrderStatus(order.status, order.paymentStatus),
   paymentStatus: order.paymentStatus,
+  paymentMethod: order.paymentMethod,
   deliveryMethod: order.deliveryMethod,
   courierName: order.courierName,
   trackingNumber: order.trackingNumber,
@@ -15,6 +16,7 @@ const serializeTrackingOrder = (order) => ({
   estimatedDeliveryDate: order.estimatedDeliveryDate,
   fulfillmentNotes: order.fulfillmentNotes,
   shippingAddress: order.shippingAddress,
+  mpesaPayment: order.mpesaPayment,
   totalAmount: order.totalAmount,
   items: order.items,
   statusTimeline: (order.statusTimeline || []).map((item) => ({

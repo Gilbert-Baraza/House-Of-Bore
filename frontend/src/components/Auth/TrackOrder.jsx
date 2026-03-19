@@ -103,6 +103,14 @@ const formatDeliveryDate = (value) => {
   return new Date(value).toLocaleDateString();
 };
 
+const getLatestTrackingEvent = (timeline = []) => {
+  if (!timeline.length) {
+    return null;
+  }
+
+  return timeline[timeline.length - 1];
+};
+
 const TrackOrder = () => {
   const { customer } = useContext(AuthContext);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -172,6 +180,7 @@ const TrackOrder = () => {
 
   const activeTrackingStageIndex = getTrackingStageIndex(result?.status);
   const hasExceptionState = result?.status === "cancelled" || result?.status === "returned";
+  const latestTrackingEvent = getLatestTrackingEvent(result?.statusTimeline || []);
 
   return (
     <section className={authStyles.authWrapper}>
@@ -255,6 +264,10 @@ const TrackOrder = () => {
 
             <div className={authStyles.trackMeta}>
               <div>
+                <span>Payment method</span>
+                <strong>{formatStatusLabel(result.paymentMethod)}</strong>
+              </div>
+              <div>
                 <span>Delivery</span>
                 <strong>{formatStatusLabel(result.deliveryMethod)}</strong>
               </div>
@@ -274,7 +287,23 @@ const TrackOrder = () => {
                 <span>Total</span>
                 <strong>${result.totalAmount}</strong>
               </div>
+              <div>
+                <span>Last update</span>
+                <strong>{latestTrackingEvent ? formatTimelineDate(latestTrackingEvent.changedAt) : "Pending update"}</strong>
+              </div>
             </div>
+
+            {latestTrackingEvent ? (
+              <div className={authStyles.trackNote}>
+                <strong>Latest shipping update</strong>
+                <p>{latestTrackingEvent.note || "Status updated"}</p>
+                {latestTrackingEvent.location ? (
+                  <p>
+                    <strong>Current location:</strong> {latestTrackingEvent.location}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
 
             {result.courierTrackingUrl ? (
               <div className={authStyles.trackNote}>
@@ -312,6 +341,7 @@ const TrackOrder = () => {
                         </span>
                       </strong>
                       <span>{item.note || "Status updated"}</span>
+                      {item.location ? <span>Location: {item.location}</span> : null}
                     </div>
                     <span>{formatTimelineDate(item.changedAt)}</span>
                   </div>

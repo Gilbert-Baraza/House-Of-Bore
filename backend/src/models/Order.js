@@ -18,6 +18,7 @@ const orderTimelineSchema = new mongoose.Schema(
   {
     status: { type: String, required: true, trim: true },
     note: { type: String, default: "", trim: true },
+    location: { type: String, default: "", trim: true },
     changedAt: { type: Date, default: Date.now }
   },
   { _id: false }
@@ -32,6 +33,20 @@ const shippingAddressSchema = new mongoose.Schema(
     region: { type: String, default: "", trim: true },
     postalCode: { type: String, default: "", trim: true },
     country: { type: String, default: "", trim: true }
+  },
+  { _id: false }
+);
+
+const mpesaPaymentSchema = new mongoose.Schema(
+  {
+    phoneNumber: { type: String, default: "", trim: true },
+    merchantRequestId: { type: String, default: "", trim: true },
+    checkoutRequestId: { type: String, default: "", trim: true },
+    receiptNumber: { type: String, default: "", trim: true },
+    transactionDate: { type: String, default: "", trim: true },
+    resultCode: { type: Number, default: null },
+    resultDesc: { type: String, default: "", trim: true },
+    customerMessage: { type: String, default: "", trim: true }
   },
   { _id: false }
 );
@@ -53,6 +68,11 @@ const orderSchema = new mongoose.Schema(
       enum: ["pending", "paid", "failed", "refunded"],
       default: "pending"
     },
+    paymentMethod: {
+      type: String,
+      enum: ["mpesa", "paypal"],
+      default: "mpesa"
+    },
     deliveryMethod: {
       type: String,
       enum: ["standard", "express", "pickup"],
@@ -65,6 +85,7 @@ const orderSchema = new mongoose.Schema(
     fulfillmentNotes: { type: String, default: "", trim: true },
     internalNote: { type: String, default: "", trim: true },
     shippingAddress: { type: shippingAddressSchema, default: () => ({}) },
+    mpesaPayment: { type: mpesaPaymentSchema, default: () => ({}) },
     statusTimeline: { type: [orderTimelineSchema], default: [] },
     totalAmount: { type: Number, required: true, min: 0 },
     items: { type: [orderItemSchema], default: [] }

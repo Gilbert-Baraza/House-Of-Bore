@@ -178,6 +178,52 @@
     color: rgba(0, 0, 0, 0.72);
 }
 
+.paymenthelper {
+    margin: 0 0 16px;
+    padding: 12px 14px;
+    border-radius: 16px;
+    background: #f7f8fb;
+    color: rgba(0, 0, 0, 0.68);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.rulebox {
+    margin-bottom: 18px;
+    padding: 16px 18px;
+    border-radius: 20px;
+    background: #fff7ef;
+    border: 1px solid rgba(246, 139, 30, 0.16);
+}
+
+.rulebox strong {
+    display: block;
+    margin-bottom: 10px;
+}
+
+.rulelist {
+    margin: 0;
+    padding-left: 18px;
+    display: grid;
+    gap: 8px;
+    color: rgba(0, 0, 0, 0.7);
+    font-size: 14px;
+}
+
+.rulelinks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0 0;
+    font-size: 14px;
+}
+
+.rulelinks a {
+    color: #c96c08;
+    text-decoration: none;
+    font-weight: 600;
+}
+
 .successalert {
     border-radius: 20px !important;
 }

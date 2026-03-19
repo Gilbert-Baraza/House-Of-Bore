@@ -14,6 +14,7 @@ import Button from 'react-bootstrap/Button'
 import Alert from 'react-bootstrap/Alert'
 import { createOrder } from '../../api/orders';
 import { AuthContext } from '../../context/AuthContext';
+import { legalContent } from '../../data/legalContent';
 
 const focusField = (fieldName) => {
     if (!fieldName || typeof document === 'undefined') {
@@ -63,6 +64,8 @@ const Cart = ({ emptyCart, productDetail, productSpecs }) => {
         customerName: '',
         customerEmail: '',
         customerPhone: '',
+        paymentMethod: 'mpesa',
+        mpesaPhoneNumber: '',
         fullName: '',
         line1: '',
         line2: '',
@@ -120,6 +123,7 @@ const Cart = ({ emptyCart, productDetail, productSpecs }) => {
             customerName: customer.name || previous.customerName,
             customerEmail: customer.email || previous.customerEmail,
             customerPhone: customer.phone || previous.customerPhone,
+            mpesaPhoneNumber: customer.phone || previous.mpesaPhoneNumber,
             fullName: customer.defaultAddress?.fullName || previous.fullName,
             line1: customer.defaultAddress?.line1 || previous.line1,
             line2: customer.defaultAddress?.line2 || previous.line2,
@@ -158,6 +162,10 @@ const Cart = ({ emptyCart, productDetail, productSpecs }) => {
             nextErrors.customerPhone = 'Phone number is required.';
         }
 
+        if (checkout.paymentMethod === 'mpesa' && !checkout.mpesaPhoneNumber.trim()) {
+            nextErrors.mpesaPhoneNumber = 'M-Pesa phone number is required.';
+        }
+
         if (!checkout.line1.trim()) {
             nextErrors.line1 = 'Street address is required.';
         }
@@ -189,6 +197,8 @@ const Cart = ({ emptyCart, productDetail, productSpecs }) => {
                 customerName: checkout.customerName,
                 customerEmail: checkout.customerEmail,
                 customerPhone: checkout.customerPhone,
+                paymentMethod: checkout.paymentMethod,
+                mpesaPhoneNumber: checkout.paymentMethod === 'mpesa' ? checkout.mpesaPhoneNumber : '',
                 deliveryMethod: checkout.deliveryMethod,
                 isSubscribed: checkout.isSubscribed,
                 shippingAddress,
@@ -221,7 +231,9 @@ const Cart = ({ emptyCart, productDetail, productSpecs }) => {
                     {orderSuccess ? (
                         <Col lg={12}>
                             <Alert variant='success' className={cartStyles.successalert}>
-                                Order {orderSuccess.orderNumber} placed successfully. Total: ${Math.round(orderSuccess.totalAmount)}
+                                {orderSuccess.paymentMethod === 'mpesa'
+                                    ? `Order ${orderSuccess.orderNumber} created. ${orderSuccess.paymentInitiation?.customerMessage || 'Check your phone for the M-Pesa prompt.'}`
+                                    : `Order ${orderSuccess.orderNumber} placed successfully. Total: $${Math.round(orderSuccess.totalAmount)}`}
                             </Alert>
                         </Col>
                     ) : null}
@@ -363,6 +375,12 @@ const Cart = ({ emptyCart, productDetail, productSpecs }) => {
                                                 <Form.Control data-field="customerPhone" name="customerPhone" value={checkout.customerPhone} onChange={handleCheckoutChange} type="text" placeholder="Phone number" className={`${cartStyles.checkoutinput} ${fieldErrors.customerPhone ? cartStyles.checkoutinputInvalid : ''}`} />
                                                 {fieldErrors.customerPhone ? <div className={cartStyles.fieldError}>{fieldErrors.customerPhone}</div> : null}
                                             </Form.Group>
+                                            <Form.Group controlId="checkoutPaymentMethod">
+                                                <Form.Select name="paymentMethod" value={checkout.paymentMethod} onChange={handleCheckoutChange} className={cartStyles.checkoutinput}>
+                                                    <option value="mpesa">M-Pesa</option>
+                                                    <option value="paypal">PayPal</option>
+                                                </Form.Select>
+                                            </Form.Group>
                                             <Form.Group controlId="checkoutDelivery">
                                                 <Form.Select name="deliveryMethod" value={checkout.deliveryMethod} onChange={handleCheckoutChange} className={cartStyles.checkoutinput}>
                                                     <option value="standard">Standard delivery</option>
@@ -370,6 +388,12 @@ const Cart = ({ emptyCart, productDetail, productSpecs }) => {
                                                     <option value="pickup">Pickup station</option>
                                                 </Form.Select>
                                             </Form.Group>
+                                            {checkout.paymentMethod === 'mpesa' ? (
+                                                <Form.Group controlId="checkoutMpesaPhone" className={cartStyles.checkoutfull}>
+                                                    <Form.Control data-field="mpesaPhoneNumber" name="mpesaPhoneNumber" value={checkout.mpesaPhoneNumber} onChange={handleCheckoutChange} type="text" placeholder="M-Pesa phone number e.g. 0712345678" className={`${cartStyles.checkoutinput} ${fieldErrors.mpesaPhoneNumber ? cartStyles.checkoutinputInvalid : ''}`} />
+                                                    {fieldErrors.mpesaPhoneNumber ? <div className={cartStyles.fieldError}>{fieldErrors.mpesaPhoneNumber}</div> : null}
+                                                </Form.Group>
+                                            ) : null}
                                             <Form.Group controlId="shippingFullName" className={cartStyles.checkoutfull}>
                                                 <Form.Control name="fullName" value={checkout.fullName} onChange={handleCheckoutChange} type="text" placeholder="Shipping recipient name" className={cartStyles.checkoutinput} />
                                             </Form.Group>
@@ -396,6 +420,11 @@ const Cart = ({ emptyCart, productDetail, productSpecs }) => {
                                                 {fieldErrors.country ? <div className={cartStyles.fieldError}>{fieldErrors.country}</div> : null}
                                             </Form.Group>
                                         </div>
+                                        <div className={cartStyles.paymenthelper}>
+                                            {checkout.paymentMethod === 'mpesa'
+                                                ? 'When you place the order, we will send an M-Pesa STK push to the phone number above.'
+                                                : 'PayPal orders are saved now and can be marked paid from the admin dashboard while gateway setup is completed.'}
+                                        </div>
                                         <Form.Check
                                             className={cartStyles.subscribebox}
                                             type="checkbox"
@@ -405,8 +434,25 @@ const Cart = ({ emptyCart, productDetail, productSpecs }) => {
                                             onChange={handleCheckoutChange}
                                             label="Send me offers and order updates from House of bore"
                                         />
+                                        <div className={cartStyles.rulebox}>
+                                            <strong>Checkout and order rules</strong>
+                                            <ul className={cartStyles.rulelist}>
+                                                {legalContent.checkoutRules.map((rule) => (
+                                                    <li key={rule}>{rule}</li>
+                                                ))}
+                                            </ul>
+                                            <p className={cartStyles.rulelinks}>
+                                                <Link to="/privacy-policy">Privacy Policy</Link>
+                                                <span>·</span>
+                                                <Link to="/terms">Terms</Link>
+                                                <span>·</span>
+                                                <Link to="/return-refund-policy">Returns</Link>
+                                                <span>·</span>
+                                                <Link to="/shipping-policy">Shipping</Link>
+                                            </p>
+                                        </div>
                                         <Button type='submit' variant='dark' className={`${cartStyles.checkoutbtn} d-block w-100`} disabled={submittingOrder}>
-                                            {submittingOrder ? 'Placing Order...' : `Place Order (${totalQty} item${totalQty > 1 ? 's' : ''})`}
+                                            {submittingOrder ? 'Processing Checkout...' : `Place Order (${totalQty} item${totalQty > 1 ? 's' : ''})`}
                                         </Button>
                                     </form>
                                 </Card.Body>

@@ -1,5 +1,5 @@
 import './App.css';
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import DressStyle from './components/Home/DressStyle';
 import Footer from './components/Home/Footer';
 import HappyCustomer from './components/Home/HappyCustomer';
@@ -10,7 +10,7 @@ import TopNav from './components/Home/TopNav';
 import TopSelling from './components/Home/TopSelling';
 import Shop from './components/Shop/Shop';
 import Product from './components/Product/Product';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ProductContext } from './context/ProductContext';
 import ProductDetail from './components/Product/ProductDetail';
 import ProductMore from './components/Product/ProductMore';
@@ -25,11 +25,19 @@ import SignIn from './components/Auth/SignIn';
 import SignUp from './components/Auth/SignUp';
 import Account from './components/Auth/Account';
 import TrackOrder from './components/Auth/TrackOrder';
+import PolicyPage from './components/Legal/PolicyPage';
+import { legalContent } from './data/legalContent';
 
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+  }, [pathname]);
+
+  return null;
+};
 function App() {
-
-
   const [productID, setProductID] = useState(() => {
     const savedID = localStorage.getItem('productID');
     return savedID;
@@ -60,6 +68,7 @@ function App() {
                 <CartProvider>
                   <ProductSpecsContext.Provider value={{ productSpecs, setProductSpecs }}>
                     <Router>
+                      <ScrollToTop />
                       <Routes>
                       <Route path='/'
                         element={<div>
@@ -124,6 +133,34 @@ function App() {
                         element={<div>
                           <TopNav />
                           <TrackOrder />
+                          <Footer />
+                        </div>}>
+                      </Route>
+                      <Route path='/privacy-policy'
+                        element={<div>
+                          <TopNav />
+                          <PolicyPage {...legalContent.privacy} />
+                          <Footer />
+                        </div>}>
+                      </Route>
+                      <Route path='/terms'
+                        element={<div>
+                          <TopNav />
+                          <PolicyPage {...legalContent.terms} />
+                          <Footer />
+                        </div>}>
+                      </Route>
+                      <Route path='/return-refund-policy'
+                        element={<div>
+                          <TopNav />
+                          <PolicyPage {...legalContent.returns} />
+                          <Footer />
+                        </div>}>
+                      </Route>
+                      <Route path='/shipping-policy'
+                        element={<div>
+                          <TopNav />
+                          <PolicyPage {...legalContent.shipping} />
                           <Footer />
                         </div>}>
                       </Route>

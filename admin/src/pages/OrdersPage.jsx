@@ -10,6 +10,7 @@ const orderStatuses = ["unpaid", "to_be_shipped", "shipped", "out_for_delivery",
 const paymentStatuses = ["pending", "paid", "failed", "refunded"];
 const deliveryMethods = ["standard", "express", "pickup"];
 const requiredIndicator = <span className="field-label-required">*</span>;
+
 const focusField = (fieldName) => {
   if (!fieldName || typeof document === "undefined") {
     return;
@@ -82,23 +83,31 @@ const getStatusIcon = (value) => {
     case "pending":
       return "!";
     case "to_be_shipped":
-      return "□";
+      return "\u25A1";
     case "shipped":
-      return "→";
+      return "\u2192";
     case "out_for_delivery":
-      return "⇢";
+      return "\u21E2";
     case "completed":
     case "paid":
-      return "✓";
+      return "\u2713";
     case "cancelled":
     case "failed":
-      return "×";
+      return "\u00D7";
     case "returned":
     case "refunded":
-      return "↩";
+      return "\u21A9";
     default:
-      return "•";
+      return "\u2022";
   }
+};
+
+const getLatestTimelineEntry = (timeline = []) => {
+  if (!timeline.length) {
+    return null;
+  }
+
+  return timeline[timeline.length - 1];
 };
 
 const OrdersPage = () => {
@@ -119,7 +128,8 @@ const OrdersPage = () => {
     estimatedDeliveryDate: "",
     fulfillmentNotes: "",
     internalNote: "",
-    trackingUpdate: ""
+    trackingUpdate: "",
+    trackingLocation: ""
   });
 
   const loadOrders = async () => {
@@ -157,6 +167,7 @@ const OrdersPage = () => {
     }
 
     const refreshed = orders.find((order) => order._id === selectedOrder._id) || selectedOrder;
+    const latestTimelineEntry = getLatestTimelineEntry(refreshed.statusTimeline || []);
 
     setSelectedOrder(refreshed);
     setDraft({
@@ -171,7 +182,8 @@ const OrdersPage = () => {
         : "",
       fulfillmentNotes: refreshed.fulfillmentNotes || "",
       internalNote: refreshed.internalNote || "",
-      trackingUpdate: ""
+      trackingUpdate: "",
+      trackingLocation: latestTimelineEntry?.location || ""
     });
   }, [orders, selectedOrder?._id]);
 
@@ -185,10 +197,20 @@ const OrdersPage = () => {
     return matchesStatus && matchesSearch;
   });
 
+  const applyTrackingPreset = (preset) => {
+    setDraft((previous) => ({
+      ...previous,
+      status: preset.status || previous.status,
+      trackingUpdate: preset.message,
+      trackingLocation: preset.location || previous.trackingLocation
+    }));
+  };
+
   const handleSaveDetails = async () => {
     if (!selectedOrder?._id) {
       return;
     }
+
     setFeedback({ type: "", message: "" });
     const nextErrors = {};
 
@@ -218,6 +240,7 @@ const OrdersPage = () => {
     if (!selectedOrder?._id) {
       return;
     }
+
     setFeedback({ type: "", message: "" });
     const nextErrors = {};
 
@@ -242,7 +265,8 @@ const OrdersPage = () => {
       await apiClient.patch(`/admin/orders/${selectedOrder._id}/status`, {
         status: draft.status,
         paymentStatus: draft.paymentStatus,
-        customerUpdate: draft.trackingUpdate
+        customerUpdate: draft.trackingUpdate,
+        trackingLocation: draft.trackingLocation
       });
 
       setFeedback({ type: "success", message: "Tracking update saved successfully." });
@@ -428,6 +452,10 @@ const OrdersPage = () => {
                   </strong>
                 </div>
                 <div>
+                  <span>Method</span>
+                  <strong>{formatStatusLabel(selectedOrder.paymentMethod)}</strong>
+                </div>
+                <div>
                   <span>ETA</span>
                   <strong>{formatDeliveryDate(selectedOrder.estimatedDeliveryDate)}</strong>
                 </div>
@@ -481,6 +509,15 @@ const OrdersPage = () => {
                       {fieldErrors.paymentStatus ? <div className="field-error">{fieldErrors.paymentStatus}</div> : null}
                     </label>
                     <label className="field-group">
+                      <span>Current location / hub</span>
+                      <input
+                        disabled={!canWrite}
+                        placeholder="Example: Nairobi sorting center"
+                        value={draft.trackingLocation}
+                        onChange={(event) => setDraft((previous) => ({ ...previous, trackingLocation: event.target.value }))}
+                      />
+                    </label>
+                    <label className="field-group">
                       <span>Customer-facing tracking update</span>
                       <textarea
                         disabled={!canWrite}
@@ -489,6 +526,60 @@ const OrdersPage = () => {
                         onChange={(event) => setDraft((previous) => ({ ...previous, trackingUpdate: event.target.value }))}
                       />
                     </label>
+                  </div>
+                  <div className="table-actions" style={{ marginTop: "14px", flexWrap: "wrap" }}>
+                    <button
+                      disabled={!canWrite}
+                      type="button"
+                      className="secondary-button"
+                      onClick={() =>
+                        applyTrackingPreset({
+                          status: "to_be_shipped",
+                          message: "Your order has been packed and is waiting for courier pickup."
+                        })
+                      }
+                    >
+                      Ready to ship
+                    </button>
+                    <button
+                      disabled={!canWrite}
+                      type="button"
+                      className="secondary-button"
+                      onClick={() =>
+                        applyTrackingPreset({
+                          status: "shipped",
+                          message: "Your parcel has been handed to the courier and is now in transit."
+                        })
+                      }
+                    >
+                      Mark shipped
+                    </button>
+                    <button
+                      disabled={!canWrite}
+                      type="button"
+                      className="secondary-button"
+                      onClick={() =>
+                        applyTrackingPreset({
+                          status: "out_for_delivery",
+                          message: "Your order is out for delivery and should arrive soon."
+                        })
+                      }
+                    >
+                      Out for delivery
+                    </button>
+                    <button
+                      disabled={!canWrite}
+                      type="button"
+                      className="secondary-button"
+                      onClick={() =>
+                        applyTrackingPreset({
+                          status: "completed",
+                          message: "Your order has been delivered successfully."
+                        })
+                      }
+                    >
+                      Mark delivered
+                    </button>
                   </div>
                   <div className="form-actions">
                     <button disabled={!canWrite} type="button" className="primary-button" onClick={handleSaveTrackingUpdate}>
@@ -507,6 +598,8 @@ const OrdersPage = () => {
                   <div className="detail-list">
                     <div className="detail-list__item"><span>Email</span><strong>{selectedOrder.customerEmail}</strong></div>
                     <div className="detail-list__item"><span>Phone</span><strong>{selectedOrder.customerPhone || "--"}</strong></div>
+                    <div className="detail-list__item"><span>Payment method</span><strong>{formatStatusLabel(selectedOrder.paymentMethod)}</strong></div>
+                    <div className="detail-list__item"><span>M-Pesa phone</span><strong>{selectedOrder.mpesaPayment?.phoneNumber || "--"}</strong></div>
                     <div className="detail-list__item"><span>Delivery</span><strong>{formatStatusLabel(selectedOrder.deliveryMethod)}</strong></div>
                     <div className="detail-list__item"><span>Courier</span><strong>{selectedOrder.courierName || "--"}</strong></div>
                     <div className="detail-list__item"><span>Estimated delivery</span><strong>{formatDeliveryDate(selectedOrder.estimatedDeliveryDate)}</strong></div>
@@ -666,6 +759,7 @@ const OrdersPage = () => {
                             </span>
                           </strong>
                           <div className="muted-copy">{item.note || "Status updated"}</div>
+                          {item.location ? <div className="muted-copy">Location: {item.location}</div> : null}
                         </div>
                         <span>{formatTimelineDate(item.changedAt)}</span>
                       </div>
