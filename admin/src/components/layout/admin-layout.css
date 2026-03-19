@@ -7,6 +7,12 @@
     linear-gradient(180deg, #f6f7fb 0%, #eef1f7 100%);
 }
 
+.admin-mobile-menu,
+.admin-sidebar-backdrop,
+.admin-mobile-sidebar {
+  display: none;
+}
+
 .admin-sidebar {
   display: flex;
   flex-direction: column;
@@ -97,7 +103,102 @@
   }
 
   .admin-sidebar {
-    border-right: 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    display: none;
+  }
+
+  .admin-mobile-menu {
+    display: inline-grid;
+    gap: 4px;
+    position: fixed;
+    top: 18px;
+    left: 18px;
+    z-index: 40;
+    padding: 12px;
+    border: 0;
+    border-radius: 16px;
+    background: #15161b;
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.16);
+  }
+
+  .admin-mobile-menu span {
+    display: block;
+    width: 20px;
+    height: 2px;
+    border-radius: 999px;
+    background: #ffffff;
+  }
+
+.admin-sidebar-backdrop {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  border: 0;
+  background: rgba(15, 23, 42, 0.42);
+  opacity: 0;
+  animation: admin-backdrop-fade 0.22s ease forwards;
+}
+
+.admin-mobile-sidebar {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 50;
+    width: min(320px, 86vw);
+    height: 100vh;
+    padding: 24px;
+    background: #15161b;
+    color: #ffffff;
+    transform: translateX(-100%);
+    opacity: 0;
+    transition: transform 0.28s ease, opacity 0.22s ease;
+    box-shadow: 18px 0 40px rgba(15, 23, 42, 0.2);
+  }
+
+  .admin-mobile-sidebar.is-open {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  .admin-mobile-sidebar__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .admin-mobile-close {
+    border: 0;
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 1.4rem;
+    line-height: 1;
+  }
+
+  .admin-main {
+    padding: 84px 18px 18px;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-main {
+    padding: 78px 14px 14px;
+  }
+}
+
+@keyframes admin-backdrop-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
   }
 }
