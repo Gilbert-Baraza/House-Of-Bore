@@ -105,17 +105,31 @@
 
 @media(max-width:600px) {
     .footercontainer {
-        padding: 10px !important;
+        padding: 14px 12px 20px !important;
     }
 
     .footergrid {
         display: grid;
         grid-template-columns: repeat(1, 1fr);
         justify-items: start;
-        gap: 25px;
+        gap: 20px;
     }
 
     .footergrid>div:first-child {
-        grid-column-end: span 2;
+        grid-column-end: span 1;
+    }
+
+    .desctext,
+    .footerlinks {
+        font-size: 14px;
+    }
+
+    .socialiconscontainer {
+        flex-wrap: wrap;
+    }
+
+    .paymentMethods {
+        justify-content: flex-start;
+        width: 100%;
     }
 }

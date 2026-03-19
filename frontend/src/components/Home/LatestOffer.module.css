@@ -5,6 +5,7 @@
 .latestofferbg {
     background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-dark) 100%);
     border-radius: 25px;
+    box-shadow: 0 22px 45px rgba(246, 139, 30, 0.18);
 }
 
 .latestoffertitle {
@@ -40,6 +41,24 @@
 
 @media(max-width:600px) {
     .latestoffercontainer {
-        margin: 10px !important;
+        margin: 12px !important;
+    }
+
+    .latestofferbg {
+        border-radius: 22px;
+    }
+
+    .latestoffertitle {
+        line-height: 1.08;
+        letter-spacing: -0.06em;
+    }
+
+    .formcontrol {
+        padding: 14px 18px 14px 44px !important;
+        background-position: 14px 50%;
+    }
+
+    .formbtn {
+        padding: 14px 18px !important;
     }
 }

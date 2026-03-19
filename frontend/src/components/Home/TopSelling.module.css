@@ -13,6 +13,7 @@
 .slidercard {
     background-color: #F0EEED;
     border-radius: 20px;
+    overflow: hidden;
 }
 
 .sliderprice {
@@ -64,6 +65,32 @@
     .newarrivalcontainer {
         margin: 0 !important;
     }
+
+    .newarrivaltitle {
+        font-size: clamp(2rem, 9vw, 2.5rem);
+        letter-spacing: -0.06em;
+    }
+
+    .slidercard {
+        border-radius: 18px;
+    }
+
+    .sliderprice {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+    }
+
+    .slideroldprice {
+        padding: 0 !important;
+    }
+
+    .sliderdiscountbg {
+        width: auto;
+        padding: 4px 10px;
+    }
+
     .viewbtn {
         width: 100%;
     }

@@ -57,7 +57,22 @@
         margin: 0px !important;
     }
 
+    .happycustomertitle {
+        font-size: clamp(2rem, 9vw, 2.5rem);
+        letter-spacing: -0.06em;
+    }
+
+    .sectionText {
+        font-size: 14px;
+    }
+
     .sliderarrows:first-child {
         margin-right: 10px;
+    }
+
+    .slidercard {
+        height: 100% !important;
+        min-height: 240px;
+        padding: 18px 16px;
     }
 }

@@ -1,6 +1,8 @@
 .herobg {
     overflow: hidden;
     background: linear-gradient(135deg, #fff4e8 0%, #f7f1ea 100%) url('../../assets/images/heroimg1.png') no-repeat center center;
+    border-bottom-left-radius: 36px;
+    border-bottom-right-radius: 36px;
 }
 
 .herocontainer {
@@ -39,9 +41,6 @@
 }
 
 .heroimg {
-    /* background: url('../../assets/images/heroimg.png') no-repeat top center;
-    background-size: cover;
-    background-position-x: 100% 75%; */
     height: 600px;
 }
 
@@ -83,12 +82,15 @@
     .herobg {
         background: unset;
         background-color: #F2F0F1;
+        border-bottom-left-radius: 28px;
+        border-bottom-right-radius: 28px;
     }
 
     .heroimg {
         background: url('../../assets/images/heroimg.png') no-repeat top center;
         background-size: cover;
-        height: 500px;
+        height: 420px;
+        margin-top: 12px;
     }
 
     #icon1 {
@@ -132,17 +134,32 @@
 @media(max-width:600px) {
     .herocontainer {
         margin: 0 !important;
+        padding: 0 12px 20px !important;
     }
 
     .herobg {
         background: unset;
         background-color: #F2F0F1;
+        border-bottom-left-radius: 24px;
+        border-bottom-right-radius: 24px;
+    }
+
+    .eyebrow {
+        margin-bottom: 0.75rem;
+        font-size: 0.72rem;
+    }
+
+    .herotitle {
+        font-size: clamp(2rem, 10vw, 2.75rem);
+        line-height: 1;
+        letter-spacing: -0.08em;
     }
 
     .heroimg {
         background: url('../../assets/images/heroimg.png') no-repeat top center;
-        background-size: cover;
-        height: 400px;
+        background-size: contain;
+        height: 320px;
+        margin-top: 18px;
     }
 
     #icon1 {
@@ -159,12 +176,16 @@
         display: grid !important;
         grid-template-columns: repeat(4, 1fr);
         grid-template-rows: 1fr 1fr;
-        gap: 10px;
-        justify-items: center;
+        gap: 14px 10px;
+        justify-items: start;
     }
 
     #herostats>div {
         grid-column-end: span 2;
+        width: 100%;
+        border-right: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
     #herostats>div:last-child {
@@ -175,8 +196,8 @@
         display: grid !important;
         grid-template-columns: repeat(6, 1fr);
         grid-template-rows: 1fr 1fr;
-        gap: 15px;
-        padding: 30px;
+        gap: 12px;
+        padding: 22px 16px;
         justify-items: center;
     }
 
@@ -199,5 +220,10 @@
 
     .herobtn {
         width: 100%;
+    }
+
+    .brandPill {
+        font-size: 0.78rem;
+        text-align: center;
     }
 }

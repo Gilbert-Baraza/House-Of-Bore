@@ -209,6 +209,52 @@ const TopNav = () => {
               </HeaderAction>
             </div>
           </div>
+          <Form className={`${topnavStyles.mobileSearchWrap} d-lg-none`} onSubmit={handleSearchSubmit}>
+            <Form.Control
+              type="search"
+              placeholder="Search products"
+              className={topnavStyles.navsearch}
+              aria-label="Search"
+              value={searchTerm}
+              onChange={handleSearchChange}
+              onFocus={() => {
+                if (searchTerm.trim()) {
+                  setSearchOpen(true);
+                }
+              }}
+              onBlur={() => {
+                window.setTimeout(() => setSearchOpen(false), 120);
+              }}
+            />
+            {searchOpen ? (
+              <div className={topnavStyles.searchDropdown}>
+                {liveResults.length ? (
+                  <>
+                    {liveResults.map((product) => (
+                      <button
+                        key={product.id}
+                        type="button"
+                        className={topnavStyles.searchResult}
+                        onMouseDown={() => handleResultSelect(product)}
+                      >
+                        <img src={product.image} alt={product.title} className={topnavStyles.searchThumb} />
+                        <span className={topnavStyles.searchMeta}>
+                          <strong>{product.title}</strong>
+                          <span>{product.category}</span>
+                        </span>
+                        <span className={topnavStyles.searchPrice}>${product.discountedPrice}</span>
+                      </button>
+                    ))}
+                    <button type="submit" className={topnavStyles.searchViewAll}>
+                      View all results for "{searchTerm.trim()}"
+                    </button>
+                  </>
+                ) : (
+                  <div className={topnavStyles.searchEmpty}>No products match "{searchTerm.trim()}".</div>
+                )}
+              </div>
+            ) : null}
+          </Form>
           <Offcanvas show={show} onHide={() => setShow(false)} className='w-75'>
             <Offcanvas.Header closeButton>
               <Offcanvas.Title><BrandLogo /></Offcanvas.Title>

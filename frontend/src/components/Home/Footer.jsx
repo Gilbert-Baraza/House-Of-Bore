@@ -103,7 +103,7 @@ const Footer = () => {
                             ))}
                         </div>
                         <div className='mb-3'>
-                            <svg width="auto" height="1" viewBox="0 0 1240 1" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <svg width="100%" height="1" viewBox="0 0 1240 1" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
                                 <line x1="-4.37114e-08" y1="0.5" x2="1240" y2="0.499892" stroke="black" strokeOpacity="0.1" />
                             </svg>
                         </div>
